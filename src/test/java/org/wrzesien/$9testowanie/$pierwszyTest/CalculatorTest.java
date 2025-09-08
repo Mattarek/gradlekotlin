@@ -5,30 +5,50 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.MethodSource;
 
 class CalculatorTest {
 	Calculator calculator;
+	//
+	//	@BeforeAll
+	//	static void beforeAll() {
+	//		System.out.println("Before All!");
+	//	}
+	//
+	//	@AfterAll
+	//	static void afterAll() {
+	//		System.out.println("After All!");
+	//	}
+	//
+	//	@BeforeEach
+	//	void beforeEach() {
+	//		System.out.println("Before each!");
+	//	}
+	//
+	//	@AfterEach
+	//	void afterEach() {
+	//		System.out.println("After each!");
+	//	}
 
-	@BeforeAll
-	static void beforeAll() {
-		System.out.println("Before All!");
+	@SuppressWarnings("unused")
+	static int[][] testData() {
+		return new int[][]{
+				{5, 2, 3},
+				{8, 3, 5},
+				{9, 2, 7}
+		};
 	}
 
-	@AfterAll
-	static void afterAll() {
-		System.out.println("After All!");
-	}
+	@ParameterizedTest
+	@MethodSource("testData")
+	void testCalculator(final int[] testData) {
+		calculator = new Calculator();
 
-	@BeforeEach
-	void beforeEach() {
-		System.out.println("Before each!");
-	}
-
-	@AfterEach
-	void afterEach() {
-		System.out.println("After each!");
+		Assertions.assertEquals(testData[0], calculator.add(testData[1], testData[2]));
 	}
 
 	@Test
@@ -80,6 +100,7 @@ class CalculatorTest {
 	}
 
 	@Test
+	@Disabled("Explenation why this test is disable!")
 	void assertionsTest() {
 		Assertions.assertAll(
 				() -> Assertions.assertEquals("Test1", "Test1", () -> "my custom message 1"),
@@ -88,9 +109,11 @@ class CalculatorTest {
 		);
 	}
 
-	private String createMessage(final int param) {
-		System.out.println("Message creation: " + param);
-		return "failure message: " + param;
+	@Test
+	void testCalculator() {
+		final int left = 5;
+		final int right = 7;
+		final int expected = 12;
 	}
 
 	@Test
