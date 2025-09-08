@@ -1,20 +1,28 @@
 plugins {
-    id("java")
+	id("java")
 }
 
 group = "org.example"
 version = "1.0-SNAPSHOT"
 
 repositories {
-    mavenCentral()
+	mavenCentral()
 }
 
 dependencies {
-    testImplementation(platform("org.junit:junit-bom:5.10.0"))
-    testImplementation("org.junit.jupiter:junit-jupiter")
-    testRuntimeOnly("org.junit.platform:junit-platform-launcher")
+	// Lombok
+	compileOnly("org.projectlombok:lombok:1.18.34")
+	annotationProcessor("org.projectlombok:lombok:1.18.34")
+
+	// Do testów z Lombokiem też można dodać:
+	testCompileOnly("org.projectlombok:lombok:1.18.34")
+	testAnnotationProcessor("org.projectlombok:lombok:1.18.34")
+
+	implementation("org.slf4j:slf4j-api:1.7.25")
+//	implementation("org.slf4j:slf4j-simple:1.7.25")
+
+	implementation("org.slf4j:slf4j-api:2.0.16")
+	implementation("ch.qos.logback:logback-classic:1.5.6")
 }
 
-tasks.test {
-    useJUnitPlatform()
-}
+

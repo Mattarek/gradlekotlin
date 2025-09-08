@@ -1,4 +1,4 @@
-package org.wrzesien.lombok.lombokPractice;
+package org.wrzesien.$7lombok.lombokPractice;
 
 import lombok.With;
 

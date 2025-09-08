@@ -1,0 +1,14 @@
+2025-09-07 12:00:35.330 Main [main] DEBUG - This is a DEBUG message
+2025-09-07 12:00:35.333 Main [main] INFO  - This is an INFO message
+2025-09-07 12:00:35.333 Main [main] WARN  - This is a WARN message
+2025-09-07 12:00:35.333 Main [main] ERROR - This is an ERROR message
+2025-09-07 12:00:35.333 Main [main] INFO  - Starting some work...
+2025-09-07 12:00:36.340 Main [main] DEBUG - Work in progress...
+2025-09-07 12:00:37.346 Main [main] INFO  - Work finished successfully!
+2025-09-07 12:53:36.771 Main [main] DEBUG - This is a DEBUG message
+2025-09-07 12:53:36.775 Main [main] INFO  - This is an INFO message
+2025-09-07 12:53:36.776 Main [main] WARN  - This is a WARN message
+2025-09-07 12:53:36.776 Main [main] ERROR - This is an ERROR message
+2025-09-07 12:53:36.776 Main [main] INFO  - Starting some work...
+2025-09-07 12:53:37.783 Main [main] DEBUG - Work in progress...
+2025-09-07 12:53:38.798 Main [main] INFO  - Work finished successfully!

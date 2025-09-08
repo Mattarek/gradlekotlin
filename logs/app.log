@@ -1,0 +1,19 @@
+2025-09-07 11:46:41.779 [main] TRACE o.w.$.$1intro.logger.Logger1 - Logging trace message in: org.wrzesien.$8logowanieAplikacji.$1intro.logger.Logger1
+2025-09-07 11:46:41.783 [main] DEBUG o.w.$.$1intro.logger.Logger1 - Logging debug message in: org.wrzesien.$8logowanieAplikacji.$1intro.logger.Logger1
+2025-09-07 11:46:41.784 [main] INFO  o.w.$.$1intro.logger.Logger1 - Logging info message in: org.wrzesien.$8logowanieAplikacji.$1intro.logger.Logger1
+2025-09-07 11:47:29.230 [main] TRACE o.w.$.$1intro.logger.Logger1 - Logging trace message in: org.wrzesien.$8logowanieAplikacji.$1intro.logger.Logger1
+2025-09-07 11:47:29.233 [main] DEBUG o.w.$.$1intro.logger.Logger1 - Logging debug message in: org.wrzesien.$8logowanieAplikacji.$1intro.logger.Logger1
+2025-09-07 11:47:29.233 [main] INFO  o.w.$.$1intro.logger.Logger1 - Logging info message in: org.wrzesien.$8logowanieAplikacji.$1intro.logger.Logger1
+2025-09-07 11:48:56.213 [main] TRACE o.w.$.$1intro.Main - Trace message – szczegóły dla debugowania
+2025-09-07 11:48:56.215 [main] DEBUG o.w.$.$1intro.Main - Debug message – przydatne w trakcie developmentu
+2025-09-07 11:48:56.215 [main] INFO  o.w.$.$1intro.Main - Info message – normalny przepływ działania aplikacji
+2025-09-07 11:48:56.216 [main] WARN  o.w.$.$1intro.Main - Warn message – coś jest podejrzane, ale jeszcze działa
+2025-09-07 11:48:56.216 [main] ERROR o.w.$.$1intro.Main - Error message – coś poszło nie tak!
+2025-09-07 11:49:40.466 [main] TRACE o.w.$.$1intro.Main - This is a TRACE message
+2025-09-07 11:49:40.470 [main] DEBUG o.w.$.$1intro.Main - This is a DEBUG message
+2025-09-07 11:49:40.470 [main] INFO  o.w.$.$1intro.Main - This is an INFO message
+2025-09-07 11:49:40.471 [main] WARN  o.w.$.$1intro.Main - This is a WARN message
+2025-09-07 11:49:40.471 [main] ERROR o.w.$.$1intro.Main - This is an ERROR message
+2025-09-07 11:49:40.471 [main] INFO  o.w.$.$1intro.Main - Starting some work...
+2025-09-07 11:49:41.482 [main] DEBUG o.w.$.$1intro.Main - Work in progress...
+2025-09-07 11:49:42.486 [main] INFO  o.w.$.$1intro.Main - Work finished successfully!

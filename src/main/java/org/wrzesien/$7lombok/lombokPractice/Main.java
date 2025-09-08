@@ -1,4 +1,4 @@
-package org.wrzesien.lombok.lombokPractice;
+package org.wrzesien.$7lombok.lombokPractice;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
