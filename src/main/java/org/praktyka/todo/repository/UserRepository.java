@@ -8,27 +8,31 @@ import java.util.List;
 
 public class UserRepository {
 	private final String fileName;
-	private final List<User> users;
-	private final FileService fileService = new FileService();
+	private final List<User> usersList = new ArrayList<>();
+	private final FileService fileService;
 
-	public UserRepository(final String fileName, final List<User> users) {
+	public UserRepository(final String fileName, final FileService fileService) {
 		this.fileName = fileName;
-		this.users = users;
+		this.fileService = fileService;
 	}
 
 	public List<User> loadUsers() {
-		if (fileName.isEmpty()) {
-			return new ArrayList<>();
-		}
-		final List<User> users = fileService.load(fileName);
-		return users;
+		usersList.clear();
+		usersList.addAll(fileService.load(fileName));
+		return usersList;
 	}
 
 	public boolean saveUsers() {
-		if (fileName.isEmpty()) {
+		fileService.save(fileName, usersList);
+		return true;
+	}
+
+	public boolean addUser(final User user) {
+		if (usersList.stream().anyMatch(u -> u.login().equals(user.login()))) {
 			return false;
 		}
-		fileService.save(fileName, users);
+		usersList.add(user);
+		saveUsers();
 		return true;
 	}
 }

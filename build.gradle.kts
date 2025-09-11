@@ -1,6 +1,6 @@
 plugins {
-	id("java")
-	id("jacoco")
+	java
+	jacoco
 }
 
 group = "pl.zajavka"
@@ -17,26 +17,29 @@ repositories {
 }
 
 dependencies {
+	// Logowanie
 	implementation("ch.qos.logback:logback-classic:1.2.11")
 
-
-	testImplementation("org.junit.jupiter:junit-jupiter:5.8.2")
-	testImplementation("org.junit.jupiter:junit-jupiter-params:5.8.2")
-
+	// Lombok
 	compileOnly("org.projectlombok:lombok:1.18.34")
 	annotationProcessor("org.projectlombok:lombok:1.18.34")
 
+	// Testy
+	testImplementation("org.junit.jupiter:junit-jupiter:5.10.0")
+	testImplementation("org.junit.jupiter:junit-jupiter-params:5.10.0")
+	testImplementation("org.mockito:mockito-core:5.3.1")
+	testImplementation("org.mockito:mockito-junit-jupiter:5.3.1")
 	testCompileOnly("org.projectlombok:lombok:1.18.34")
 	testAnnotationProcessor("org.projectlombok:lombok:1.18.34")
-
 }
 
 tasks.test {
 	useJUnitPlatform()
+	jvmArgs("-XX:+EnableDynamicAgentLoading")
 	testLogging {
+		showStandardStreams = false  // nie wyświetla ostrzeżeń JVM
 		events("passed", "skipped", "failed")
 	}
-	finalizedBy(tasks.jacocoTestReport)
 }
 
 jacoco {
@@ -46,9 +49,9 @@ jacoco {
 tasks.jacocoTestReport {
 	dependsOn(tasks.test)
 	reports {
-		xml.required = true      // ✅ Gradle 9 Kotlin DSL
-		csv.required = false
-		html.outputLocation = layout.buildDirectory.dir("jacocoHtml")
+		xml.required.set(true)
+		csv.required.set(false)
+		html.outputLocation.set(layout.buildDirectory.dir("jacocoHtml"))
 	}
 }
 
@@ -60,7 +63,7 @@ tasks.jacocoTestCoverageVerification {
 			limit {
 				counter = "LINE"
 				value = "COVEREDRATIO"
-				minimum = "0.20".toBigDecimal()
+				minimum = 0.2.toBigDecimal()
 			}
 		}
 	}

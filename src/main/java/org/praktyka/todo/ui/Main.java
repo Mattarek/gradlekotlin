@@ -1,20 +1,17 @@
 package org.praktyka.todo.ui;
 
-import org.praktyka.todo.model.User;
 import org.praktyka.todo.repository.UserRepository;
 import org.praktyka.todo.service.AuthService;
+import org.praktyka.todo.service.FileService;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 import java.util.Scanner;
 
 public class Main {
 	static final Scanner scanner = new Scanner(System.in);
 	private static final String FILE_NAME = "users.txt";
-	private static final List<User> users = new ArrayList<>();
-	static final UserRepository userRepository = new UserRepository(FILE_NAME, users);
+	private static final FileService fileService = new FileService();
+	static final UserRepository userRepository = new UserRepository(FILE_NAME, fileService);
 	static final AuthService authService = new AuthService(userRepository);
 
 	public static void main(final String[] args) {
