@@ -33,12 +33,18 @@ public class UserManagementService {
 	}
 
 	public Optional<User> update(final String email, final User updatedUser) {
+		// Jeśli jeszcze takiego nie ma to zwracamy bład:
 		if (!usersMap.containsKey(email)) {
 			throw new RuntimeException(
 					String.format("User with email: [%s] doesn't exist", email)
 			);
 		}
 
+		// Jeśli tu dotarliśmy to znaczy, ze juz jest, więc usuwamy starego
+		usersMap.remove(email);
+
+		// i dodajemy nowego
+		usersMap.put(updatedUser.getEmail(), updatedUser);
 		return Optional.of(updatedUser);
 	}
 

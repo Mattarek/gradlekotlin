@@ -3,57 +3,64 @@ plugins {
 	id("jacoco")
 }
 
-group = "org.example"
-version = "1.0-SNAPSHOT"
+group = "pl.zajavka"
+version = "1.0.0"
+
+java {
+	toolchain {
+		languageVersion.set(JavaLanguageVersion.of(21))
+	}
+}
 
 repositories {
 	mavenCentral()
 }
 
 dependencies {
-	// Lombok
+	implementation("ch.qos.logback:logback-classic:1.2.11")
+
+
+	testImplementation("org.junit.jupiter:junit-jupiter:5.8.2")
+	testImplementation("org.junit.jupiter:junit-jupiter-params:5.8.2")
+
 	compileOnly("org.projectlombok:lombok:1.18.34")
 	annotationProcessor("org.projectlombok:lombok:1.18.34")
 
 	testCompileOnly("org.projectlombok:lombok:1.18.34")
 	testAnnotationProcessor("org.projectlombok:lombok:1.18.34")
 
-	// SLF4J + Logback
-	implementation("org.slf4j:slf4j-api:2.0.16")
-	implementation("ch.qos.logback:logback-classic:1.5.13")
-
-	// JUnit 5
-	testImplementation("org.junit.jupiter:junit-jupiter-api:5.10.0")
-	testRuntimeOnly("org.junit.jupiter:junit-jupiter-engine:5.10.0")
-	testRuntimeOnly("org.junit.platform:junit-platform-launcher")
 }
 
 tasks.test {
-	useJUnitPlatform() // jawnie mówimy, że testujemy JUnit 5
+	useJUnitPlatform()
+	testLogging {
+		events("passed", "skipped", "failed")
+	}
 	finalizedBy(tasks.jacocoTestReport)
 }
 
-// konfiguracja raportów JaCoCo
-tasks.jacocoTestReport {
-	dependsOn(tasks.test) // raporty generujemy po uruchomieniu testów
+jacoco {
+	toolVersion = "0.8.12"
+}
 
+tasks.jacocoTestReport {
+	dependsOn(tasks.test)
 	reports {
-		html.required.set(true)
-		xml.required.set(true)
-		csv.required.set(false)
+		xml.required = true      // ✅ Gradle 9 Kotlin DSL
+		csv.required = false
+		html.outputLocation = layout.buildDirectory.dir("jacocoHtml")
 	}
 }
 
 tasks.jacocoTestCoverageVerification {
-	dependsOn(tasks.test) // najpierw uruchamiamy testy
-
+	dependsOn(tasks.test)
 	violationRules {
 		rule {
+			element = "CLASS"
 			limit {
-				// minimalne pokrycie linii
 				counter = "LINE"
-				value = "COVEREDCOUNT"
-				minimum = 0.5.toBigDecimal() // 50%
+				value = "COVEREDRATIO"
+				minimum = "0.20".toBigDecimal()
 			}
 		}
 	}
