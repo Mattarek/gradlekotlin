@@ -1,4 +1,4 @@
-package org.praktyka.todo.ui;
+package org.praktyka.todo;
 
 import org.praktyka.todo.repository.UserRepository;
 import org.praktyka.todo.service.AuthService;
