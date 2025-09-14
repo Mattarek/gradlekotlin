@@ -1,0 +1,8 @@
+@startuml
+!theme vibrant
+
+skinparam classAttributeIconSize 0
+
+abstract class main.java.org.wrzesien.$10uml.Employee {
+
+}
