@@ -15,14 +15,19 @@ import java.util.Objects;
  * - LoD: exposes minimal behaviour to clients
  */
 public record Order(String id, Customer customer, List<Product> items, Instant createdAt) {
-	public Order(final String id, final Customer customer, final List<Product> items, final Instant createdAt) {
-		this.id = ValidationUtils.requireNonEmpty(id, "id");
-		this.customer = Objects.requireNonNull(customer, "customer");
+
+	// dodatkowy konstruktor, np. do tworzenia "teraz"
+	public Order(final String id, final Customer customer, final List<Product> items) {
+		this(id, customer, items, Instant.now());
+	}
+
+	public Order {
+		id = ValidationUtils.requireNonEmpty(id, "id");
+		customer = Objects.requireNonNull(customer, "customer");
 		if (items == null || items.isEmpty()) {
-			throw new IllegalArgumentException("Items cannot be empty.");
+			throw new IllegalArgumentException("items cannot be empty");
 		}
-		this.items = Collections.unmodifiableList(items);
-		this.createdAt = Instant.now();
+		items = Collections.unmodifiableList(items);
 	}
 
 	public int totalPriceCents() {
