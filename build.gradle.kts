@@ -16,28 +16,35 @@ repositories {
 	mavenCentral()
 }
 
+// ✅ Definicja wersji w Kotlin DSL
+val springVersion = "6.1.13"
+val lombokVersion = "1.18.34"
+val junitVersion = "5.8.2"
+
 dependencies {
+	// Spring Core
+	implementation("org.springframework:spring-core:$springVersion")
+	implementation("org.springframework:spring-beans:$springVersion")
+	implementation("org.springframework:spring-context:$springVersion")
+	implementation("org.springframework:spring-context-support:$springVersion")
+	implementation("org.springframework:spring-expression:$springVersion")
+
 	// Logowanie
 	implementation("ch.qos.logback:logback-classic:1.2.11")
 
 	// Lombok
-	compileOnly("org.projectlombok:lombok:1.18.34")
-	annotationProcessor("org.projectlombok:lombok:1.18.34")
+	compileOnly("org.projectlombok:lombok:$lombokVersion")
+	annotationProcessor("org.projectlombok:lombok:$lombokVersion")
 
 	// Testy
-	testImplementation("org.junit.jupiter:junit-jupiter:5.10.0")
-	testImplementation("org.junit.jupiter:junit-jupiter-params:5.10.0")
-	testImplementation("org.mockito:mockito-core:5.3.1")
-	testImplementation("org.mockito:mockito-junit-jupiter:5.3.1")
-	testCompileOnly("org.projectlombok:lombok:1.18.34")
-	testAnnotationProcessor("org.projectlombok:lombok:1.18.34")
+	testImplementation("org.junit.jupiter:junit-jupiter:$junitVersion")
 }
 
 tasks.test {
 	useJUnitPlatform()
 	jvmArgs("-XX:+EnableDynamicAgentLoading")
 	testLogging {
-		showStandardStreams = false  // nie wyświetla ostrzeżeń JVM
+		showStandardStreams = false // nie wyświetla ostrzeżeń JVM
 		events("passed", "skipped", "failed")
 	}
 }
@@ -63,7 +70,7 @@ tasks.jacocoTestCoverageVerification {
 			limit {
 				counter = "LINE"
 				value = "COVEREDRATIO"
-				minimum = 0.2.toBigDecimal()
+				minimum = "0.2".toBigDecimal()
 			}
 		}
 	}

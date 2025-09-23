@@ -3,19 +3,19 @@ package org.wrzesien.$11designPattarns.PrototypeInPractice;
 public class BlackSheep implements Sheep {
 	private String name;
 
-	public BlackSheep(String name) {
+	public BlackSheep(final String name) {
 		this.name = name;
 	}
 
-	public Sheep clone() {
-		return new BlackSheep(this.name);
+	public BlackSheep(final BlackSheep other) {
+		this(other.name);
 	}
 
 	public String getName() {
 		return name;
 	}
 
-	public void setName(String name) {
+	public void setName(final String name) {
 		this.name = name;
 	}
 }

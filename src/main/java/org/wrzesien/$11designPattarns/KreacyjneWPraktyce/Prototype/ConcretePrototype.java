@@ -1,4 +1,9 @@
 package org.wrzesien.$11designPattarns.KreacyjneWPraktyce.Prototype;
 
-public class ConcretePrototype {
+record ConcretePrototype(String name) implements Prototype {
+
+	@Override
+	public Prototype clone() {
+		return new ConcretePrototype(name + " (copy)");
+	}
 }

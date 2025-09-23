@@ -11,4 +11,12 @@ public class InjectedBean {
 	public void someMethod() {
 		System.out.println("SomeMethod().");
 	}
+
+	public void initMethod() {
+		System.out.println("InjectedBean initMethod()");
+	}
+
+	public void destroyMethod() {
+		System.out.println("InjectedBean destroyMethod()");
+	}
 }

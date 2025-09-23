@@ -2,6 +2,6 @@ package org.wrzesien.$11designPattarns.Adapter;
 
 import java.math.BigDecimal;
 
-public interface DimentionAdapter {
+public interface DimensionAdapter {
 	BigDecimal getDimension();
 }
