@@ -17,23 +17,33 @@ public class Main {
 	// - Adnotacje
 
 	public static void main(final String[] args) {
-		System.out.println("### Before context ###");
 		final AbstractApplicationContext context = new AnnotationConfigApplicationContext(ExampleConfigurationClass.class);
-		final ExampleSingletonBean singletonOne = context.getBean(ExampleSingletonBean.class);
-		final ExampleSingletonBean singletonTwo = context.getBean(ExampleSingletonBean.class);
 
-		final ExamplePrototypeBean prototypeOne = context.getBean(ExamplePrototypeBean.class);
-		final ExamplePrototypeBean prototypeTwo = context.getBean(ExamplePrototypeBean.class);
+		System.out.println();
+		System.out.println("### Singleton ###");
+		final ExampleSingletonBean singletonBeanOne = context.getBean(ExampleSingletonBean.class);
+		final ExampleSingletonBean singletonBeanTwo = context.getBean(ExampleSingletonBean.class);
 
-		System.out.println("SingletonOne == SingletonTwo: " + (singletonOne == singletonTwo));
-		System.out.println("PrototypeOne == PrototypeTwo: " + (prototypeOne == prototypeTwo));
+		System.out.println("PrototypeOne.exampleValue = " + singletonBeanOne.getExampleValue());
+		System.out.println("PrototypeTwo.exampleValue = " + singletonBeanTwo.getExampleValue());
 
-		final InjectedBean injectedBean = context.getBean(InjectedBean.class);
-		final boolean isInjectedBeanAsSingleton = injectedBean == singletonOne.getInjectedBean()
-				&& injectedBean == singletonOne.getInjectedBean()
-				&& injectedBean == prototypeOne.getInjectedBean()
-				&& injectedBean == prototypeTwo.getInjectedBean();
+		System.out.println("### singletonBeanOne.setExampleValue(2) ###");
+		singletonBeanOne.setExampleValue(2);
 
-		System.out.println("Is injectedBean a Singleton? " + isInjectedBeanAsSingleton);
+		System.out.println("singletonBeanOne.exampleValue = " + singletonBeanOne.getExampleValue());
+		System.out.println("singletonBeanTwo.exampleValue = " + singletonBeanTwo.getExampleValue());
+		System.out.println();
+		System.out.println("### Prototype ###");
+		final ExamplePrototypeBean prototypeBeanOne = context.getBean(ExamplePrototypeBean.class);
+		final ExamplePrototypeBean prototypeBeanTwo = context.getBean(ExamplePrototypeBean.class);
+
+		System.out.println("PrototypeOne.exampleValue = " + prototypeBeanOne.getExampleValue());
+		System.out.println("PrototypeTwo.exampleValue = " + prototypeBeanTwo.getExampleValue());
+
+		System.out.println("### prototypeBeanOne.setExampleValue(2) ###");
+		prototypeBeanOne.setExampleValue(2);
+
+		System.out.println("PrototypeOne.exampleValue = " + prototypeBeanOne.getExampleValue());
+		System.out.println("PrototypeTwo.exampleValue = " + prototypeBeanTwo.getExampleValue());
 	}
 }

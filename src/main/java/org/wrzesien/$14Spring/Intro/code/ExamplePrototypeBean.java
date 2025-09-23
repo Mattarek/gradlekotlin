@@ -9,10 +9,19 @@ import org.springframework.stereotype.Component;
 @Scope("prototype")
 public class ExamplePrototypeBean {
 	private final InjectedBean injectedBean;
+	private int exampleValue = 1;
 
 	@Autowired
 	public ExamplePrototypeBean(final InjectedBean injectedBean) {
 		this.injectedBean = injectedBean;
+	}
+
+	public int getExampleValue() {
+		return exampleValue;
+	}
+
+	public void setExampleValue(final int exampleValue) {
+		this.exampleValue = exampleValue;
 	}
 
 	public void exampleMethod() {

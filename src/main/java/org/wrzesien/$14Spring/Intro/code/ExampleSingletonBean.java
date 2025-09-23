@@ -9,10 +9,19 @@ import org.springframework.stereotype.Component;
 @Scope(ConfigurableBeanFactory.SCOPE_SINGLETON)
 public class ExampleSingletonBean {
 	private final InjectedBean injectedBean;
+	private int exampleValue = 1;
 
 	@Autowired
 	public ExampleSingletonBean(final InjectedBean injectedBean) {
 		this.injectedBean = injectedBean;
+	}
+
+	public int getExampleValue() {
+		return exampleValue;
+	}
+
+	public void setExampleValue(final int exampleValue) {
+		this.exampleValue = exampleValue;
 	}
 
 	public void exampleMethod() {
