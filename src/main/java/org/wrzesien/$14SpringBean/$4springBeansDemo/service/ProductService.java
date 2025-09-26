@@ -1,8 +1,8 @@
 package org.wrzesien.$14SpringBean.$4springBeansDemo.service;
 
 import org.springframework.stereotype.Service;
-import org.wrzesien.$14SpringBean.$4springBeansDemo.model.Product;
-import org.wrzesien.$14SpringBean.$4springBeansDemo.repository.ProductRepository;
+import org.wrzesien.$14SpringBean.$5springBeansDemoTwo.model.Product;
+import org.wrzesien.$14SpringBean.$5springBeansDemoTwo.repository.ProductRepository;
 
 @Service
 public class ProductService {

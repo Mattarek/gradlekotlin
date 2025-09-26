@@ -2,13 +2,13 @@ package org.wrzesien.$14SpringBean.$4springBeansDemo;
 
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.annotation.AnnotationConfigApplicationContext;
-import org.wrzesien.$14SpringBean.$4springBeansDemo.config.AppConfig;
-import org.wrzesien.$14SpringBean.$4springBeansDemo.model.Customer;
-import org.wrzesien.$14SpringBean.$4springBeansDemo.model.Order;
-import org.wrzesien.$14SpringBean.$4springBeansDemo.model.Product;
-import org.wrzesien.$14SpringBean.$4springBeansDemo.service.CustomerService;
-import org.wrzesien.$14SpringBean.$4springBeansDemo.service.OrderService;
-import org.wrzesien.$14SpringBean.$4springBeansDemo.service.ProductService;
+import org.wrzesien.$14SpringBean.$5springBeansDemoTwo.config.AppConfig;
+import org.wrzesien.$14SpringBean.$5springBeansDemoTwo.model.Customer;
+import org.wrzesien.$14SpringBean.$5springBeansDemoTwo.model.Order;
+import org.wrzesien.$14SpringBean.$5springBeansDemoTwo.model.Product;
+import org.wrzesien.$14SpringBean.$5springBeansDemoTwo.service.CustomerService;
+import org.wrzesien.$14SpringBean.$5springBeansDemoTwo.service.OrderService;
+import org.wrzesien.$14SpringBean.$5springBeansDemoTwo.service.ProductService;
 
 public class AppMain {
 	public static void main(final String[] args) {
