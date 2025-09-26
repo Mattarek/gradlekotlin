@@ -1,9 +1,9 @@
 package org.praktyka.selfEEnvolving;
 
 public class Vehicle {
-	private final String wheels;
+	private final int wheels;
 
-	public Vehicle(final String wheels) {
+	public Vehicle(final int wheels) {
 		this.wheels = wheels;
 	}
 }

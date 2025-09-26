@@ -1,9 +1,10 @@
 package org.praktyka.selfEEnvolving;
 
 public class Auto extends Vehicle {
-	Engine engine = new Engine();
+	private final Engine engine;
 
-	public Auto(final String wheels) {
+	public Auto(final int wheels, final Engine engine) {
 		super(wheels);
+		this.engine = engine;
 	}
 }
