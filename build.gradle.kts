@@ -19,7 +19,7 @@ repositories {
 // ✅ Definicja wersji w Kotlin DSL
 val springVersion = "6.1.13"
 val lombokVersion = "1.18.34"
-val junitVersion = "5.8.2"
+val junitVersion = "5.11.2"
 
 dependencies {
 	// Spring Core
@@ -38,6 +38,10 @@ dependencies {
 
 	// Testy
 	testImplementation("org.junit.jupiter:junit-jupiter:$junitVersion")
+
+	// Mockito
+	testImplementation("org.mockito:mockito-core:5.14.2")
+	testImplementation("org.mockito:mockito-junit-jupiter:5.14.2")
 }
 
 tasks.test {
@@ -47,6 +51,8 @@ tasks.test {
 		showStandardStreams = false // nie wyświetla ostrzeżeń JVM
 		events("passed", "skipped", "failed")
 	}
+	useJUnitPlatform()
+	
 }
 
 jacoco {

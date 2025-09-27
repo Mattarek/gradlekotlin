@@ -1,0 +1,2320 @@
+### Wzorce projektowe ###
+	# Wzorce Kreacyjne #
+	1. Singleton
+		# Kategoria: Kreacyjny
+		# Problem, który rozwiązuje
+			Singleton rozwiązuje problem, gdy w systemie musi istnieć dokładnie jeden obiekt danej klasy, a jednocześnie potrzebny jest
+			  globalny punkt dostępu do tego obiektu. Typowe przykłady:
+				- Menedżer konfiguracji (Configuration Manager)
+				- Logger (logowanie aplikacji)
+				- Połączenie z bazą danych (Database Connection Pool, choć zwykle bardziej zaawansowane)
+
+		# Bez Singletona każdy moduł mógłby tworzyć własną instancję, co prowadziłoby do:
+			- Niespójnych danych (np. różne konfiguracje w różnych instancjach)
+			- Nadmiernego zużycia pamięci
+			- Problemów w synchronizacji przy współbieżnym dostępie
+
+			# Implementacje w Javie
+				1. Prosty Singleton (bez bezpieczeństwa wątkowego)
+					# Uwagi:
+						- Prosty i szybki, niebezpieczny w środowisku wielowątkowym.
+						- Dwa wątki mogą utworzyć dwa różne obiekty, jeśli wywołają getInstance() równocześnie.
+
+					# Kod
+						public class Singleton {
+						    private static Singleton instance;
+
+						    private Singleton() {} // prywatny konstruktor
+
+						    public static Singleton getInstance() {
+						        if (instance == null) {
+						            instance = new Singleton();
+						        }
+						        return instance;
+						    }
+						}
+
+				2. Thread-safe Singleton (synchronizacja)
+					# Kod
+						public class Singleton {
+						    private static Singleton instance;
+
+						    private Singleton() {}
+
+						    public static synchronized Singleton getInstance() {
+						        if (instance == null) {
+						            instance = new Singleton();
+						        }
+						        return instance;
+					    	}
+						}
+
+					# Uwagi:
+						- Synchronizacja gwarantuje bezpieczeństwo wątkowe.
+						- Minusem jest spadek wydajności, bo każdy dostęp blokuje metodę.
+
+				3. Double-checked Locking (optymalna wersja wątkowa)
+					# Kod
+						public class Singleton {
+						    private static volatile Singleton instance;
+
+						    private Singleton() {}
+
+						    public static Singleton getInstance() {
+						        if (instance == null) { // pierwszy test
+						            synchronized (Singleton.class) {
+						                if (instance == null) { // drugi test
+						                    instance = new Singleton();
+						                }
+						            }
+						        }
+						        return instance;
+						    }
+						}
+
+					# Uwagi:
+						- Kombinacja blokady i podwójnego sprawdzenia.
+						- Słowo kluczowe volatile zapobiega problemom z widocznością zmian między wątkami.
+						- Najczęściej stosowane w systemach wielowątkowych.
+
+				4. Singleton przy użyciu Enum
+					# Kod - Enum
+						import java.sql.Connection;
+						import java.sql.DriverManager;
+						import java.sql.SQLException;
+
+						public enum DatabaseConnection {
+						    INSTANCE;
+
+						    private Connection connection;
+
+						    // Konstruktor enum – wywoływany tylko raz
+						    DatabaseConnection() {
+						        try {
+						            String url = "jdbc:mysql://localhost:3306/mydb";
+						            String user = "root";
+						            String password = "password";
+						            connection = DriverManager.getConnection(url, user, password);
+						            System.out.println("Połączenie z bazą utworzone");
+						        } catch (SQLException e) {
+						            e.printStackTrace();
+						        }
+						    }
+
+						    // Publiczna metoda do pobrania połączenia
+						    public Connection getConnection() {
+						        return connection;
+						    }
+						}
+
+					# Main
+						import java.sql.Connection;
+						import java.sql.ResultSet;
+						import java.sql.Statement;
+
+						public class Main {
+						    public static void main(String[] args) {
+						        try {
+						            Connection conn = DatabaseConnection.INSTANCE.getConnection();
+						            Statement stmt = conn.createStatement();
+						            ResultSet rs = stmt.executeQuery("SELECT * FROM users");
+
+						            while (rs.next()) {
+						                System.out.println("User: " + rs.getString("username"));
+						            }
+						        } catch (Exception e) {
+						            e.printStackTrace();
+						        }
+						    }
+						}
+
+
+						# Uwagi:
+							- Najbezpieczniejsza implementacja w Javie (serializacja i refleksja nie łamią wzorca).
+							- Bardzo prosty kod, gwarantuje pojedynczą instancję.
+
+			# Zalety Singletona
+				- Globalny dostęp do instancji.
+				- Kontrola nad tworzeniem obiektu.
+				- Oszczędność pamięci – tylko jedna instancja.
+
+			# Wady / pułapki
+				- Trudne testowanie jednostkowe (mockowanie wymaga dodatkowych trików).
+				- Może prowadzić do ukrytych zależności w kodzie (tzw. “global state”).
+				- Nadmierne użycie może powodować problemy z projektowaniem (krytyczny punkt sprzężenia w systemie).
+
+
+	2. Builder
+		# Kategoria: Kreacyjny
+		# Problem, który rozwiązuje
+			# Builder rozwiązuje problem, gdy:
+				- Tworzymy skomplikowane obiekty z wieloma polami.
+				- Niektóre pola są opcjonalne, inne obowiązkowe.
+				- Chcemy uniknąć długich konstruktorów (tzw. “telescoping constructors”), które są trudne w użyciu i czytelności.
+
+			# Typowe przykłady:
+				- Tworzenie obiektu Car z wieloma opcjami wyposażenia.
+				- Konfigurowanie obiektów HTTP Request lub UI Component.
+
+			# Bez Buildera:
+				- Ciężko zrozumieć co każdy parametr oznacza:
+					Car car = new Car("Toyota", "Corolla", "czerwony", 4, true, false, null);
+
+		# Rozwiązanie
+			- Oddzielamy konstrukcję obiektu od jego reprezentacji.
+			- Tworzymy wewnętrzną klasę Builder, która stopniowo ustawia pola i tworzy finalny obiekt.
+			- Daje czytelny i elastyczny kod, który można rozszerzać bez zmiany istniejących konstruktorów.
+
+		# Implementacja w Javie
+			public class Car {
+			    // Pola obiektu
+			    private final String brand;     // obowiązkowe
+			    private final String model;     // obowiązkowe
+			    private final String color;     // opcjonalne
+			    private final int doors;        // opcjonalne
+			    private final boolean sunroof;  // opcjonalne
+			    private final boolean gps;      // opcjonalne
+
+			    // Prywatny konstruktor – tylko Builder może go wywołać
+			    private Car(Builder builder) {
+			        this.brand = builder.brand;
+			        this.model = builder.model;
+			        this.color = builder.color;
+			        this.doors = builder.doors;
+			        this.sunroof = builder.sunroof;
+			        this.gps = builder.gps;
+			    }
+
+			    // Gettery do pól
+			    public String getBrand() { return brand; }
+			    public String getModel() { return model; }
+			    public String getColor() { return color; }
+
+			    // Klasa Builder
+			    public static class Builder {
+			        private final String brand;
+			        private final String model;
+			        private String color = "black"; // domyślna wartość
+			        private int doors = 4;           // domyślna wartość
+			        private boolean sunroof = false;
+			        private boolean gps = false;
+
+			        // Konstruktor Builder z polami obowiązkowymi
+			        public Builder(String brand, String model) {
+			            this.brand = brand;
+			            this.model = model;
+			        }
+
+			        // Metody ustawiające pola opcjonalne
+			        public Builder color(String color) { this.color = color; return this; }
+			        public Builder doors(int doors) { this.doors = doors; return this; }
+			        public Builder sunroof(boolean sunroof) { this.sunroof = sunroof; return this; }
+			        public Builder gps(boolean gps) { this.gps = gps; return this; }
+
+			        // Metoda budująca obiekt
+			        public Car build() {
+			            return new Car(this);
+			        }
+			    }
+
+			    @Override
+			    public String toString() {
+			        return brand + " " + model + " (" + color + "), doors: " + doors +
+			               ", sunroof: " + sunroof + ", GPS: " + gps;
+			    }
+			}
+
+		# Użycie w praktyce
+			public class Main {
+			    public static void main(String[] args) {
+			        Car car1 = new Car.Builder("Toyota", "Corolla")
+			                            .color("red")
+			                            .sunroof(true)
+			                            .gps(true)
+			                            .build();
+
+			        Car car2 = new Car.Builder("Honda", "Civic")
+			                            .doors(2)
+			                            .build();
+
+			        System.out.println(car1);
+			        System.out.println(car2);
+			    }
+			}
+
+			# Zalety Buildera
+				- Czytelny kod, szczególnie przy wielu opcjonalnych polach.
+				- Możliwość łatwej rozbudowy obiektu w przyszłości.
+				- Bezpieczny – pola finalne w obiekcie mogą być ustawione tylko raz.
+				- Unika “telescoping constructors” i błędów w kolejności parametrów.
+
+			# Wady / pułapki
+				- Trochę więcej kodu niż przy prostych konstruktorach.
+				- Nadmierne użycie Buildera przy prostych obiektach może być przesadą.
+
+
+
+	3. Factory Method
+		# Kategoria: Kreacyjny
+			# Problem, który rozwiązuje
+				- W systemach, gdzie tworzenie obiektów jest skomplikowane lub zależne od kontekstu, często nie chcemy, aby klient
+					znał dokładną klasę tworzonego obiektu.
+				- Chcemy odseparować logikę tworzenia obiektów od ich użycia.
+
+			# Typowe sytuacje:
+				- Tworzenie różnych typów dokumentów (PDF, Word, Excel) w zależności od potrzeb.
+				- Tworzenie różnych typów powiadomień (Email, SMS, Push).
+				- Systemy wtyczek / rozszerzeń, gdzie dokładny typ obiektu nie jest znany w momencie kompilacji.
+
+			# Bez Factory Method:
+				- Kod klienta jest ściśle powiązany z konkretnymi klasami → trudny do rozszerzenia.
+					if(type.equals("pdf")) doc = new PdfDocument();
+					else if(type.equals("word")) doc = new WordDocument();
+
+			# Rozwiązanie
+				- Tworzymy fabrykę (Factory), która decyduje, którą klasę utworzyć.
+				- Klient używa interfejsu lub klasy abstrakcyjnej, a fabryka tworzy konkretną instancję.
+				- Pozwala to na łatwe rozszerzanie systemu bez zmiany kodu klienta.
+
+			# Implementacja w Javie
+				Krok 1: Interfejs produktu
+					// Produkt
+					interface Notification {
+					    void notifyUser();
+					}
+
+				Krok 2: Konkretne produkty
+					class SMSNotification implements Notification {
+					    public void notifyUser() {
+					        System.out.println("Sending SMS notification");
+					    }
+					}
+
+					class EmailNotification implements Notification {
+					    public void notifyUser() {
+					        System.out.println("Sending Email notification");
+					    }
+					}
+
+					class PushNotification implements Notification {
+					    public void notifyUser() {
+					        System.out.println("Sending Push notification");
+					    }
+					}
+
+				# Krok 3: Abstrakcyjna fabryka
+					abstract class NotificationFactory {
+					    public abstract Notification createNotification();
+					}
+
+				# Krok 4: Konkretne fabryki
+					class SMSNotificationFactory extends NotificationFactory {
+					    public Notification createNotification() {
+					        return new SMSNotification();
+					    }
+					}
+
+					class EmailNotificationFactory extends NotificationFactory {
+					    public Notification createNotification() {
+					        return new EmailNotification();
+					    }
+					}
+
+					class PushNotificationFactory extends NotificationFactory {
+					    public Notification createNotification() {
+					        return new PushNotification();
+					    }
+					}
+
+			# Zalety Factory Method
+				- Odseparowanie tworzenia od użycia – klient nie zna konkretnych klas.
+				- Łatwe rozszerzanie – dodanie nowego typu produktu wymaga tylko stworzenia nowej fabryki i klasy produktu.
+				- Polimorfizm – klient używa tylko interfejsu / abstrakcji.
+
+			# Wady / pułapki
+			 	- Wzorzec może generować dużą liczbę klas fabryk, jeśli produktów jest dużo.
+			 	- Czasem prostszy Builder lub prosty warunek if wystarcza dla niewielkich systemów.
+
+
+
+
+	4. Abstract Factory
+		## Kategoria: Kreacyjny
+			# Problem, który rozwiązuje
+				- Kiedy aplikacja musi tworzyć rodziny powiązanych obiektów, ale nie chce znać konkretnych klas tych obiektów.
+				- Chcemy zapewnić spójność między powiązanymi obiektami (np. wszystkie GUI elementy w tym samym stylu).
+
+			# Typowe przykłady:
+				- System GUI, gdzie można tworzyć przyciski i pola tekstowe w stylu Windows, macOS lub Linux.
+				- Tworzenie obiektów dla różnych baz danych (np. MySQL, PostgreSQL) – Connection + Command + Transaction.
+				- Systemy, gdzie dodanie nowej rodziny obiektów nie wymaga zmian w kodzie klienta.
+
+			# Bez Abstract Factory:
+				- Kod klienta jest ściśle powiązany z konkretnymi klasami, trudny do zmiany stylu lub bazy.
+					Button button = new WindowsButton();
+					TextField tf = new WindowsTextField();
+
+			# Rozwiązanie
+				- Tworzymy interfejs abstrakcyjnej fabryki, który definiuje metody tworzenia wszystkich produktów z jednej rodziny.
+				- Każda konkretna fabryka implementuje ten interfejs dla swojej rodziny produktów.
+				- Klient używa tylko interfejsu fabryki i interfejsów produktów → nie zna szczegółów implementacji.
+
+		# Implementacja w Javie
+			# Krok 1: Interfejsy produktów
+				interface Button {
+				    void paint();
+				}
+
+				interface TextField {
+				    void render();
+				}
+
+			# Krok 2: Konkretne produkty
+				// Windows
+				class WindowsButton implements Button {
+				    public void paint() {
+				        System.out.println("Drawing Windows Button");
+				    }
+				}
+
+				class WindowsTextField implements TextField {
+				    public void render() {
+				        System.out.println("Rendering Windows TextField");
+				    }
+				}
+
+				// MacOS
+				class MacButton implements Button {
+				    public void paint() {
+				        System.out.println("Drawing Mac Button");
+				    }
+				}
+
+				class MacTextField implements TextField {
+				    public void render() {
+				        System.out.println("Rendering Mac TextField");
+				    }
+				}
+
+			# Krok 3: Abstrakcyjna fabryka
+				interface GUIFactory {
+				    Button createButton();
+				    TextField createTextField();
+				}
+
+			# Krok 4: Konkretne fabryki
+				class WindowsFactory implements GUIFactory {
+				    public Button createButton() { return new WindowsButton(); }
+				    public TextField createTextField() { return new WindowsTextField(); }
+				}
+
+				class MacFactory implements GUIFactory {
+				    public Button createButton() { return new MacButton(); }
+				    public TextField createTextField() { return new MacTextField(); }
+				}
+
+			# Użycie w praktyce
+				public class Main {
+				    public static void main(String[] args) {
+				        GUIFactory factory;
+
+				        // Tworzymy GUI w stylu Windows
+				        factory = new WindowsFactory();
+				        Button winButton = factory.createButton();
+				        TextField winText = factory.createTextField();
+				        winButton.paint();
+				        winText.render();
+
+				        // Tworzymy GUI w stylu MacOS
+				        factory = new MacFactory();
+				        Button macButton = factory.createButton();
+				        TextField macText = factory.createTextField();
+				        macButton.paint();
+				        macText.render();
+				    }
+				}
+
+			# Zalety Abstract Factory
+				- Zapewnia spójność produktów z jednej rodziny.
+				- Klient nie zna klas konkretnych produktów, tylko interfejsy.
+				- Łatwe rozszerzenie o nową rodzinę produktów (np. Linux GUI).
+				- Ułatwia zarządzanie dużymi systemami z wieloma wariantami obiektów.
+
+			# Wady / pułapki
+				- Tworzy więcej klas – każda rodzina obiektów wymaga osobnej fabryki.
+				- Może być przesadą dla małych projektów.
+
+	5. Prototype
+		# Kategoria: Kreacyjny
+			# Problem, który rozwiązuje
+				- Kiedy tworzenie nowych obiektów jest kosztowne (czasowo lub pamięciowo) i chcemy tworzyć kopie istniejących obiektów zamiast tworzyć je od zera.
+				- Kiedy chcemy mieć dynamiczną konfigurację obiektów w runtime, bez twardego kodowania klas.
+
+			# Typowe przykłady:
+				- Tworzenie kopii skomplikowanych obiektów konfiguracyjnych.
+				- Obiekty w grach (np. przeciwnicy lub elementy planszy), które różnią się tylko kilkoma właściwościami.
+				- Klonowanie dokumentów, zamówień lub widgetów w GUI.
+
+			# Bez Prototype:
+				- Trzeba tworzyć wszystko od nowa → kosztowne i powtarzalne.
+				# Kod
+					Document doc1 = new Document(...);
+					Document doc2 = new Document(...);
+
+			# Rozwiązanie
+				- Tworzymy interfejs Prototype z metodą clone().
+				- Każdy obiekt implementuje clone() i zwraca kopię samego siebie.
+				- Można w ten sposób łatwo tworzyć nowe obiekty na podstawie istniejących.
+
+			# Implementacja w Javie
+				- Krok 1: Interfejs Prototype
+					interface Prototype extends Cloneable {
+					    Prototype clone();
+					}
+
+				- Krok 2: Konkretna klasa
+					class Document implements Prototype {
+					    private String title;
+					    private String content;
+
+					    public Document(String title, String content) {
+					        this.title = title;
+					        this.content = content;
+					    }
+
+					    // Implementacja klonowania
+					    @Override
+					    public Prototype clone() {
+					        return new Document(this.title, this.content);
+					    }
+
+					    @Override
+					    public String toString() {
+					        return "Document [title=" + title + ", content=" + content + "]";
+					    }
+					}
+
+				- Użycie w praktyce
+					public class Main {
+					    public static void main(String[] args) {
+					        Document original = new Document("Plan projektu", "Treść planu projektu...");
+
+					        // Tworzymy kopię obiektu zamiast tworzyć od nowa
+					        Document copy = (Document) original.clone();
+
+					        System.out.println(original);
+					        System.out.println(copy);
+
+					        // Sprawdzamy, czy to różne obiekty
+					        System.out.println(original == copy); // false
+					    }
+					}
+
+
+			# Zalety Prototype
+				- Szybkie tworzenie obiektów – kopiowanie zamiast tworzenia od zera.
+				- Elastyczność – można dynamicznie tworzyć różne obiekty w runtime.
+				- Unika twardego kodowania – nowe obiekty mogą powstawać z już istniejących.
+
+			# Wady / pułapki
+				- Powierzchowne klonowanie (shallow copy) może powodować dzielenie referencji do obiektów wewnętrznych – w takim przypadku
+					trzeba zrobić głębokie klonowanie (deep copy).
+				- Nadmierne użycie może skomplikować kod i zwiększyć liczbę kopii w pamięci.
+
+	# Wzorce Strukturalne #
+	1. Adapter
+		# Kategoria: Strukturalny
+			# Problem, który rozwiązuje
+				- Czasami mamy dwie klasy, które muszą współpracować, ale mają niekompatybilne interfejsy.
+				- Chcemy użyć istniejącej klasy, bez zmiany jej kodu, w nowym kontekście.
+
+			# Typowe przykłady:
+				- Łączenie starego API z nowym systemem.
+				- Integracja z bibliotekami zewnętrznymi, które mają inne metody niż oczekuje nasz kod.
+				- Systemy, gdzie różne źródła danych (CSV, JSON, XML) muszą mieć jednolity interfejs.
+
+			# Bez Adaptera:
+				- Trzeba by zmieniać stary kod → niepożądane.
+					OldSystem oldSystem = new OldSystem();
+					oldSystem.oldRequest(); // klient oczekuje metody newRequest()
+
+			# Rozwiązanie
+				- Tworzymy klasę Adapter, która implementuje interfejs oczekiwany przez klienta i wywołuje metody starego obiektu.
+				- Adapter “tłumaczy” interfejsy.
+
+		# Implementacja w Javie
+			# Krok 1: Interfejs docelowy
+				interface Target {
+				    void request(); // metoda oczekiwana przez klienta
+				}
+
+			# Krok 2: Klasa istniejąca (adaptee)
+				class Adaptee {
+				    public void specificRequest() {
+				        System.out.println("Specyficzna metoda Adaptee");
+				    }
+				}
+
+			# Krok 3: Adapter
+				class Adapter implements Target {
+				    private Adaptee adaptee;
+
+				    public Adapter(Adaptee adaptee) {
+				        this.adaptee = adaptee;
+				    }
+
+				    @Override
+				    public void request() {
+				        // Adapter tłumaczy wywołanie
+				        adaptee.specificRequest();
+				    }
+				}
+
+			# Użycie w praktyce
+				public class Main {
+				    public static void main(String[] args) {
+				        Adaptee oldSystem = new Adaptee();
+				        Target adapter = new Adapter(oldSystem);
+
+				        // Klient używa interfejsu Target
+				        adapter.request();
+				    }
+				}
+
+			# Zalety Adaptera
+				- Pozwala używać istniejących klas w nowych kontekstach bez modyfikacji.
+				- Ułatwia integrację zewnętrznych bibliotek lub starszego kodu.
+				- Oddziela klienta od szczegółów implementacji klasy adaptee.
+
+			# Wady / pułapki
+				- Dodaje kolejną warstwę pośrednią → drobny narzut w kodzie.
+				- Nadmierne użycie może skomplikować architekturę.
+
+	2. Decorator
+		# Kategoria: Strukturalny
+		# Problem, który rozwiązuje
+			# Chcemy dynamicznie dodawać nowe funkcjonalności do obiektu, bez zmiany jego klasy.
+			# Dziedziczenie czasami nie wystarcza:
+				- Zbyt wiele kombinacji klas byłoby potrzebne,
+				- Nie można przewidzieć wszystkich rozszerzeń w czasie kompilacji.
+
+			# Typowe przykłady:
+				- Systemy graficzne: dodawanie efektów do okienek (border, scroll, shadow).
+				- Streamy w Javie: np. BufferedInputStream dekorujący FileInputStream.
+				- Systemy zamówień: dodawanie opcji do podstawowego produktu (np. gift wrap, ekspresowa wysyłka).
+
+			# Rozwiązanie
+				- Tworzymy interfejs lub klasę abstrakcyjną bazowego obiektu.
+				- Dekoratory implementują ten sam interfejs i zawierają instancję obiektu, który dekorują.
+				- Metody dekoratora wywołują oryginalne metody obiektu i dodają dodatkową funkcjonalność.
+
+			# Implementacja w Javie
+				Krok 1: Interfejs komponentu
+					interface Coffee {
+					    double cost();
+					    String description();
+					}
+
+				Krok 2: Konkretna klasa
+					class SimpleCoffee implements Coffee {
+					    public double cost() {
+					        return 5.0;
+					    }
+
+					    public String description() {
+					        return "Simple Coffee";
+					    }
+					}
+
+				Krok 3: Abstrakcyjny dekorator
+					abstract class CoffeeDecorator implements Coffee {
+					    protected Coffee decoratedCoffee;
+
+					    public CoffeeDecorator(Coffee coffee) {
+					        this.decoratedCoffee = coffee;
+					    }
+
+					    public double cost() {
+					        return decoratedCoffee.cost();
+					    }
+
+					    public String description() {
+					        return decoratedCoffee.description();
+					    }
+					}
+
+				Krok 4: Konkretne dekoratory
+					class MilkDecorator extends CoffeeDecorator {
+					    public MilkDecorator(Coffee coffee) {
+					        super(coffee);
+					    }
+
+					    @Override
+					    public double cost() {
+					        return super.cost() + 2.0;
+					    }
+
+					    @Override
+					    public String description() {
+					        return super.description() + ", Milk";
+					    }
+					}
+
+					class SugarDecorator extends CoffeeDecorator {
+					    public SugarDecorator(Coffee coffee) {
+					        super(coffee);
+					    }
+
+					    @Override
+					    public double cost() {
+					        return super.cost() + 1.0;
+					    }
+
+					    @Override
+					    public String description() {
+					        return super.description() + ", Sugar";
+					    }
+					}
+
+				# Użycie w praktyce
+					public class Main {
+					    public static void main(String[] args) {
+					        Coffee coffee = new SimpleCoffee();
+					        System.out.println(coffee.description() + " $" + coffee.cost());
+
+					        Coffee milkCoffee = new MilkDecorator(coffee);
+					        System.out.println(milkCoffee.description() + " $" + milkCoffee.cost());
+
+					        Coffee milkSugarCoffee = new SugarDecorator(milkCoffee);
+					        System.out.println(milkSugarCoffee.description() + " $" + milkSugarCoffee.cost());
+					    }
+					}
+
+				# Zalety Decoratora
+					- Dynamiczne dodawanie funkcjonalności w runtime.
+					- Unika tworzenia wielu klas pochodnych dla kombinacji funkcjonalności.
+					- Otwarty na rozszerzenia, zamknięty na modyfikacje (zasada Open/Closed).
+
+				# Wady / pułapki
+					- Może prowadzić do głębokich, trudnych do śledzenia dekoratorów (chain).
+					- Trzeba uważać na kolejność dekoratorów, bo zmienia wynik.
+
+	3. Facade
+		# Kategoria: Strukturalny
+
+			# Problem, który rozwiązuje
+				# W dużych systemach klient często musi korzystać z wielu klas i interfejsów, co jest skomplikowane.
+				# Bezpośrednia interakcja z wszystkimi klasami:
+					- Zwiększa złożoność kodu klienta,
+					- Utrudnia utrzymanie systemu,
+					- Powoduje powtarzalność wywołań.
+
+			# Typowe przykłady:
+				- Systemy multimedialne: odtwarzacz, kodeki, dekodery, ekwalizer → klient potrzebuje tylko prostego „Play”.
+				- Systemy płatności: klient wywołuje prostą metodę pay(), a fasada obsługuje logikę autoryzacji, walidacji, księgowania.
+				- Systemy domowe (smart home): włącz światło, alarm, ogrzewanie jednym wywołaniem.
+
+			# Rozwiązanie
+				- Tworzymy jedną klasę Facade, która udostępnia prosty interfejs.
+				- Facade ukrywa złożoność podsystemów, a klient używa tylko tej klasy.
+				- Ułatwia integrację i utrzymanie.
+
+		# Implementacja w Javie
+			# Krok 1: Podsystemy
+				class CPU {
+				    public void start() { System.out.println("CPU starting"); }
+				}
+
+				class Memory {
+				    public void load() { System.out.println("Loading memory"); }
+				}
+
+				class HardDrive {
+				    public void read() { System.out.println("Reading data from hard drive"); }
+				}
+
+			# Krok 2: Facade
+				class ComputerFacade {
+				    private CPU cpu;
+				    private Memory memory;
+				    private HardDrive hardDrive;
+
+				    public ComputerFacade() {
+				        this.cpu = new CPU();
+				        this.memory = new Memory();
+				        this.hardDrive = new HardDrive();
+				    }
+
+				    // Prosty interfejs dla klienta
+				    public void startComputer() {
+				        cpu.start();
+				        memory.load();
+				        hardDrive.read();
+				        System.out.println("Computer started successfully!");
+				    }
+				}
+
+			# Użycie w praktyce
+				 public class Main {
+				    public static void main(String[] args) {
+				        ComputerFacade computer = new ComputerFacade();
+
+				        // Klient używa tylko jednej metody
+				        computer.startComputer();
+				    }
+				}
+
+			# Zalety Facade
+				1. Upraszcza interfejs dla klienta.
+				2. Ukrywa złożoność podsystemów.
+				3. Łatwo rozbudowywać podsystemy bez zmiany klienta.
+				4. Ułatwia utrzymanie i integrację.
+
+			# Wady / pułapki
+				1.Nie eliminuje złożoności wewnętrznej systemu – tylko ją ukrywa.
+				2.Nadmierne stosowanie może prowadzić do “super-fasady”, która robi za dużo.
+
+
+	4. Proxy
+		# Kategoria: Strukturalny
+		# Problem, który rozwiązuje
+			- Chcemy kontrolować dostęp do obiektu lub dodać dodatkową funkcjonalność, nie zmieniając klasy oryginalnej.
+
+			# Typowe sytuacje:
+				- Lazy loading – obiekt jest tworzony dopiero wtedy, gdy jest potrzebny.
+				- Kontrola dostępu – np. autoryzacja przed wywołaniem metody.
+				- Caching – przechowywanie wyników dla drogiego w obliczeniach obiektu.
+				- Zdalne wywołania (Remote Proxy) – np. klient lokalny odwołuje się do serwera.
+
+		# Bez Proxy:
+			- Za każdym razem tworzysz kosztowny obiekt, nawet jeśli go nie potrzebujesz.
+			# Kod
+				ExpensiveService service = new ExpensiveService();
+				service.process();
+		# Rozwiązanie
+			- Tworzymy interfejs dla obiektu.
+			- Tworzymy Proxy, który implementuje ten sam interfejs i kontroluje dostęp do prawdziwego obiektu (RealSubject).
+			- Proxy może:
+				- Tworzyć obiekt dopiero przy pierwszym wywołaniu,
+				- Dodać logowanie, autoryzację, cache, itd.
+
+		# Implementacja w Javie
+			Krok 1: Interfejs
+				interface Image {
+				    void display();
+				}
+
+			Krok 2: Realny obiekt
+				class RealImage implements Image {
+				    private String filename;
+
+				    public RealImage(String filename) {
+				        this.filename = filename;
+				        loadFromDisk();
+				    }
+
+				    private void loadFromDisk() {
+				        System.out.println("Loading " + filename);
+				    }
+
+				    @Override
+				    public void display() {
+				        System.out.println("Displaying " + filename);
+				    }
+				}
+
+			Krok 3: Proxy
+				class ProxyImage implements Image {
+				    private RealImage realImage;
+				    private String filename;
+
+				    public ProxyImage(String filename) {
+				        this.filename = filename;
+				    }
+
+				    @Override
+				    public void display() {
+				        if(realImage == null) {
+				            // Tworzymy obiekt dopiero przy pierwszym wywołaniu
+				            realImage = new RealImage(filename);
+				        }
+				        realImage.display();
+				    }
+				}
+
+			# Użycie w praktyce
+				public class Main {
+				    public static void main(String[] args) {
+				        Image image1 = new ProxyImage("photo1.jpg");
+				        Image image2 = new ProxyImage("photo2.jpg");
+
+				        // Obraz ładowany dopiero przy pierwszym wyświetleniu
+				        image1.display();
+				        image1.display(); // nie ładuje ponownie
+
+				        image2.display();
+				    }
+				}
+
+		# Zalety Proxy
+			- Kontrola dostępu do obiektu.
+			- Możliwość lazy loading lub cache.
+			- Oddzielenie klienta od kosztownych operacji.
+			- Może dodawać funkcjonalność (logowanie, bezpieczeństwo) bez zmiany oryginału.
+
+		# Wady / pułapki
+			- Dodatkowa warstwa pośrednia → drobny narzut w wydajności.
+			- Może skomplikować debugowanie, jeśli jest wiele proxy w łańcuchu.
+
+	5. Copasite
+		# Kategoria: Strukturalny
+		# Problem, który rozwiązuje
+			## Mamy strukturę drzewiastą – obiekty złożone z mniejszych obiektów.
+			## Chcemy traktować pojedyncze obiekty i grupy obiektów w taki sam sposób.
+			## Typowe przykłady:
+				- System plików (pliki i foldery).
+				- Menu w aplikacji (pojedyncze elementy vs podmenu).
+
+			- Organizacja firmy (pracownik vs dział składający się z pracowników).
+
+			# Bez Composite musielibyśmy pisać różne metody dla „liści” i „gałęzi”, co komplikuje kod.
+			# Rozwiązanie
+				- Definiujemy wspólny interfejs Component dla:
+					- Leaf (liść) – pojedynczy obiekt.
+					- Composite (gałąź) – obiekt zawierający inne Component.
+				- Dzięki temu klient nie musi rozróżniać, czy pracuje na liściu czy gałęzi.
+
+			# Implementacja w Javie
+				Krok 1: Wspólny interfejs
+					interface Graphic {
+					    void draw();
+					}
+
+				Krok 2: Liść
+					class Circle implements Graphic {
+					    @Override
+					    public void draw() {
+					        System.out.println("Drawing Circle");
+					    }
+					}
+
+				Krok 3: Kompozyt (może zawierać inne obiekty)
+					import java.util.ArrayList;
+					import java.util.List;
+
+					class GraphicGroup implements Graphic {
+					    private List<Graphic> children = new ArrayList<>();
+
+					    public void add(Graphic g) {
+					        children.add(g);
+					    }
+
+					    public void remove(Graphic g) {
+					        children.remove(g);
+					    }
+
+					    @Override
+					    public void draw() {
+					        for (Graphic g : children) {
+					            g.draw();
+					        }
+					    }
+					}
+
+				# Użycie w praktyce
+					public class Main {
+					    public static void main(String[] args) {
+					        Circle c1 = new Circle();
+					        Circle c2 = new Circle();
+
+					        GraphicGroup group = new GraphicGroup();
+					        group.add(c1);
+					        group.add(c2);
+
+					        // Możemy traktować całą grupę jak pojedynczy obiekt
+					        group.draw();
+					    }
+					}
+
+				# Zalety Composite
+					- Upraszcza kod – klient nie musi wiedzieć, czy ma do czynienia z liściem czy grupą.
+					- Łatwe budowanie hierarchicznych struktur (np. drzewo plików).
+					- Rekurencja pasuje naturalnie do pracy z kompozytem.
+
+				# Wady / pułapki
+					- Trudniej kontrolować dostęp, jeśli klient powinien odróżniać liść od kompozytu.
+					- Struktura może stać się bardzo ogólna i trudna do optymalizacji.
+
+	6. Bridge
+		Kategoria: Strukturalny
+		🔹 Jaki problem rozwiązuje?
+			# Bez wzorca Bridge często mamy problem z eksplozją klas.
+			# Załóżmy, że chcemy zaimplementować różne kształty (np. Koło, Kwadrat) i każdy z nich może być rysowany
+				w różny sposób (np. czerwony, niebieski).
+
+			# Bez Bridge musielibyśmy tworzyć klasy typu:
+				- CzerwoneKoło,
+				- NiebieskieKoło,
+				- CzerwonyKwadrat,
+				- NiebieskiKwadrat, itd.
+
+			# Co przy większej liczbie wariantów prowadzi do dużej liczby klas.
+			# Wzorzec Bridge rozwiązuje to poprzez rozdzielenie hierarchii klas na:
+
+			1. Abstrakcję (np. Shape – Kształt).
+			2. Implementację (np. Color – Kolor).
+
+		🔹 Struktura
+			Abstraction – główna abstrakcja, która deleguje pracę do implementacji.
+			RefinedAbstraction – rozszerzona wersja abstrakcji.
+			Implementor – interfejs implementacji.
+			ConcreteImplementor – konkretna implementacja.
+
+		🔹 Przykład w Javie
+			// Implementor
+			interface Color {
+			    String fill();
+			}
+
+			// ConcreteImplementors
+			class RedColor implements Color {
+			    @Override
+			    public String fill() {
+			        return "czerwony";
+			    }
+			}
+
+			class BlueColor implements Color {
+			    @Override
+			    public String fill() {
+			        return "niebieski";
+			    }
+			}
+
+			// Abstraction
+			abstract class Shape {
+			    protected Color color;
+
+			    public Shape(Color color) {
+			        this.color = color;
+			    }
+
+			    abstract void draw();
+			}
+
+			// RefinedAbstractions
+			class Circle extends Shape {
+			    public Circle(Color color) {
+			        super(color);
+			    }
+
+			    @Override
+			    void draw() {
+			        System.out.println("Rysuję koło w kolorze: " + color.fill());
+			    }
+			}
+
+			class Square extends Shape {
+			    public Square(Color color) {
+			        super(color);
+			    }
+
+			    @Override
+			    void draw() {
+			        System.out.println("Rysuję kwadrat w kolorze: " + color.fill());
+			    }
+			}
+
+			// Klient
+			public class BridgeExample {
+			    public static void main(String[] args) {
+			        Shape redCircle = new Circle(new RedColor());
+			        Shape blueSquare = new Square(new BlueColor());
+
+			        redCircle.draw();   // Rysuję koło w kolorze: czerwony
+			        blueSquare.draw();  // Rysuję kwadrat w kolorze: niebieski
+			    }
+			}
+
+		🔹 Zalety Bridge
+			Unika eksplozji klas (nie trzeba robić każdej kombinacji osobno).
+			Łatwe rozszerzanie – możemy dodawać nowe kształty i kolory niezależnie.
+			Zwiększa elastyczność projektu.
+
+	7. flyweight
+		🔹 Flyweight – opis
+			# Flyweight (z ang. pyłek, „lekkie obiekty”) to wzorzec projektowy, który pozwala oszczędzać pamięć,
+				dzieląc wspólne dane pomiędzy wiele obiektów.
+			# Zamiast tworzyć tysiące identycznych obiektów (które marnują pamięć), przechowujemy je w puli współdzielonych
+				 instancji i ponownie je wykorzystujemy.
+
+		🔹 Jaki problem rozwiązuje?
+				# Wyobraź sobie grę, gdzie wyświetlanych jest np. milion drzew.
+				# Każde drzewo ma:
+					- kolor liści,
+					- teksturę kory,
+					- kształt korony,
+					- współrzędne X i Y.
+
+			👉 Bez Flyweight: dla miliona drzew przechowujesz te same dane tekstury i koloru milion razy → ogromne zużycie pamięci.
+			👉 Z Flyweight: dane wspólne (tekstury, kolory) są współdzielone w jednym obiekcie, a zmienne dane (np. współrzędne) trzymane osobno.
+
+		🔹 Struktura
+			Flyweight – interfejs dla współdzielonych obiektów.
+			ConcreteFlyweight – implementacja obiektu współdzielonego.
+			FlyweightFactory – zarządza tworzeniem i przechowywaniem obiektów Flyweight, żeby je współdzielić.
+			Client – używa Flyweight, ale dodaje do niego dane unikalne (tzw. stan zewnętrzny).
+
+		🔹 Przykład w Javie
+			# Przykład: litery w edytorze tekstu – każda litera ma ten sam kształt (stan współdzielony), ale różne pozycje na ekranie (stan zewnętrzny).
+			# Kod
+				import java.util.HashMap;
+				import java.util.Map;
+
+				// Flyweight
+				interface Glyph {
+				    void draw(int x, int y); // x,y to stan zewnętrzny (unikalny)
+				}
+
+				// ConcreteFlyweight
+				class CharacterGlyph implements Glyph {
+				    private final char symbol; // stan współdzielony
+
+				    public CharacterGlyph(char symbol) {
+				        this.symbol = symbol;
+				    }
+
+				    @Override
+				    public void draw(int x, int y) {
+				        System.out.println("Rysuję '" + symbol + "' na pozycji (" + x + "," + y + ")");
+				    }
+				}
+
+				// FlyweightFactory
+				class GlyphFactory {
+				    private final Map<Character, Glyph> pool = new HashMap<>();
+
+				    public Glyph getGlyph(char symbol) {
+				        pool.putIfAbsent(symbol, new CharacterGlyph(symbol));
+				        return pool.get(symbol);
+				    }
+				}
+
+				// Client
+				public class FlyweightExample {
+				    public static void main(String[] args) {
+				        GlyphFactory factory = new GlyphFactory();
+
+				        String text = "HELLO";
+				        int x = 0;
+
+				        for (char c : text.toCharArray()) {
+				            Glyph glyph = factory.getGlyph(c);
+				            glyph.draw(x, 10); // stan zewnętrzny = pozycja
+				            x += 10;
+				        }
+				    }
+				}
+
+		🔹 Wynik
+			Rysuję 'H' na pozycji (0,10)
+			Rysuję 'E' na pozycji (10,10)
+			Rysuję 'L' na pozycji (20,10)
+			Rysuję 'L' na pozycji (30,10)
+			Rysuję 'O' na pozycji (40,10)
+
+			➡️ Litera L została pobrana z tej samej instancji, a nie tworzona dwa razy – oszczędzamy pamięć.
+
+		🔹 Zalety Flyweight
+			- Duża oszczędność pamięci przy pracy z ogromną ilością podobnych obiektów.
+			- Separacja stanu wewnętrznego (wspólnego) i zewnętrznego (unikalnego).
+
+	# Wzorce Behawioralne #
+	1. Observer
+		🔹 Observer – opis
+			Observer (pol. Obserwator) to wzorzec projektowy z kategorii behawioralnych, który umożliwia reakcję wielu
+				obiektów na zmianę stanu jednego obiektu.
+
+		🔹 Jaki problem rozwiązuje?
+			# Bez Observera, jeśli mamy np. obiekt „gazeta” i wielu czytelników, to trzeba by ręcznie powiadamiać
+				 każdego czytelnika o nowym wydaniu.
+			# To prowadzi do silnego powiązania i trudnej rozbudowy.
+
+			👉 Dzięki Observer:
+				# Obiekt Subject (wydawca) wie tylko, że ma listę Observerów (subskrybentów).
+				# Gdy jego stan się zmienia → automatycznie powiadamia wszystkich obserwatorów.
+				# To dokładnie mechanizm publish/subscribe (Pub/Sub).
+
+		🔹 Struktura
+			Subject – obiekt obserwowany (wydawca).
+			Observer – interfejs dla obserwatorów (subskrybentów).
+			ConcreteSubject – implementacja obserwowanego obiektu.
+			ConcreteObserver – konkretni obserwatorzy, reagujący na zmiany.
+
+		🔹 Przykład w Javie
+			Scenariusz: serwis newsowy – czytelnicy subskrybują wiadomości.
+			# Kod
+				import java.util.ArrayList;
+				import java.util.List;
+
+				// Observer
+				interface Observer {
+				    void update(String news);
+				}
+
+				// ConcreteObserver
+				class Reader implements Observer {
+				    private String name;
+
+				    public Reader(String name) {
+				        this.name = name;
+				    }
+
+				    @Override
+				    public void update(String news) {
+				        System.out.println(name + " otrzymał wiadomość: " + news);
+				    }
+				}
+
+				// Subject
+				interface Subject {
+				    void subscribe(Observer observer);
+				    void unsubscribe(Observer observer);
+				    void notifyObservers(String news);
+				}
+
+				// ConcreteSubject
+				class NewsPublisher implements Subject {
+				    private List<Observer> observers = new ArrayList<>();
+
+				    @Override
+				    public void subscribe(Observer observer) {
+				        observers.add(observer);
+				    }
+
+				    @Override
+				    public void unsubscribe(Observer observer) {
+				        observers.remove(observer);
+				    }
+
+				    @Override
+				    public void notifyObservers(String news) {
+				        for (Observer observer : observers) {
+				            observer.update(news);
+				        }
+				    }
+
+				    // metoda publikacji wiadomości
+				    public void publishNews(String news) {
+				        System.out.println("\n📰 Publikacja: " + news);
+				        notifyObservers(news);
+				    }
+				}
+
+				// Klient
+				public class ObserverExample {
+				    public static void main(String[] args) {
+				        NewsPublisher publisher = new NewsPublisher();
+
+				        Observer reader1 = new Reader("Jan");
+				        Observer reader2 = new Reader("Anna");
+				        Observer reader3 = new Reader("Kasia");
+
+				        publisher.subscribe(reader1);
+				        publisher.subscribe(reader2);
+				        publisher.subscribe(reader3);
+
+				        publisher.publishNews("Nowy artykuł o Javie!");
+				        publisher.publishNews("Wzorce projektowe w praktyce.");
+
+				        // Kasia wypisuje się z subskrypcji
+				        publisher.unsubscribe(reader3);
+
+				        publisher.publishNews("Ostatnie wiadomości na dziś.");
+				    }
+				}
+
+			🔹 Wynik działania
+				📰 Publikacja: Nowy artykuł o Javie!
+				Jan otrzymał wiadomość: Nowy artykuł o Javie!
+				Anna otrzymał wiadomość: Nowy artykuł o Javie!
+				Kasia otrzymał wiadomość: Nowy artykuł o Javie!
+
+				📰 Publikacja: Wzorce projektowe w praktyce.
+				Jan otrzymał wiadomość: Wzorce projektowe w praktyce.
+				Anna otrzymał wiadomość: Wzorce projektowe w praktyce.
+				Kasia otrzymał wiadomość: Wzorce projektowe w praktyce.
+
+				📰 Publikacja: Ostatnie wiadomości na dziś.
+				Jan otrzymał wiadomość: Ostatnie wiadomości na dziś.
+				Anna otrzymał wiadomość: Ostatnie wiadomości na dziś.
+
+			🔹 Zalety Observer
+				- Luźne powiązanie między wydawcą a subskrybentami.
+				- Łatwo dodawać nowych obserwatorów bez modyfikowania kodu wydawcy.
+				- Naturalnie wspiera wzorzec event-driven.
+
+
+	2. Strategy
+		🔹 Strategy – opis
+			# trategy (pol. Strategia) to wzorzec behawioralny, który pozwala definiować rodzinę algorytmów, zamykać
+				je w oddzielnych klasach i wymieniać w trakcie działania programu.
+			# Zamiast pisać kod typu:
+				– delegujemy wybór algorytmu do osobnych klas i klient może łatwo zmieniać strategię.
+				# Kod
+					if (algorytm == 1) { ... } else if (algorytm == 2) { ... }
+
+		🔹 Jaki problem rozwiązuje?
+			Unika dużych bloków if-else / switch-case.
+			Umożliwia dynamiczne zmienianie sposobu działania programu.
+			Ułatwia dodawanie nowych algorytmów bez ruszania kodu klienta.
+
+		🔹 Struktura
+			Strategy – interfejs strategii (definiuje metodę).
+			ConcreteStrategy – konkretna implementacja algorytmu.
+			Context – klasa używająca strategii, deleguje pracę do wybranej strategii.
+
+		🔹 Przykład w Javie
+			Scenariusz: obliczanie ceny biletu z różnymi zniżkami (student, senior, brak zniżki).
+			# Kod
+				interface DiscountStrategy {
+				    double applyDiscount(double price);
+				}
+
+				// ConcreteStrategies
+				class NoDiscount implements DiscountStrategy {
+				    @Override
+				    public double applyDiscount(double price) {
+				        return price;
+				    }
+				}
+
+				class StudentDiscount implements DiscountStrategy {
+				    @Override
+				    public double applyDiscount(double price) {
+				        return price * 0.5; // 50% zniżki
+				    }
+				}
+
+				class SeniorDiscount implements DiscountStrategy {
+				    @Override
+				    public double applyDiscount(double price) {
+				        return price * 0.7; // 30% zniżki
+				    }
+				}
+
+				// Context
+				class Ticket {
+				    private DiscountStrategy discountStrategy;
+
+				    public Ticket(DiscountStrategy discountStrategy) {
+				        this.discountStrategy = discountStrategy;
+				    }
+
+				    public void setDiscountStrategy(DiscountStrategy discountStrategy) {
+				        this.discountStrategy = discountStrategy;
+				    }
+
+				    public double getFinalPrice(double basePrice) {
+				        return discountStrategy.applyDiscount(basePrice);
+				    }
+				}
+
+				// Klient
+				public class StrategyExample {
+				    public static void main(String[] args) {
+				        double basePrice = 100.0;
+
+				        Ticket ticket = new Ticket(new NoDiscount());
+				        System.out.println("Cena normalna: " + ticket.getFinalPrice(basePrice));
+
+				        ticket.setDiscountStrategy(new StudentDiscount());
+				        System.out.println("Cena dla studenta: " + ticket.getFinalPrice(basePrice));
+
+				        ticket.setDiscountStrategy(new SeniorDiscount());
+				        System.out.println("Cena dla seniora: " + ticket.getFinalPrice(basePrice));
+				    }
+				}
+
+		🔹 Wynik działania
+			Cena normalna: 100.0
+			Cena dla studenta: 50.0
+			Cena dla seniora: 70.0
+
+		🔹 Zalety Strategy
+			- Łatwe rozszerzanie (dodajesz nową strategię bez modyfikacji kodu kontekstu).
+			- Wymiana algorytmu w trakcie działania programu.
+			- Eliminuje rozbudowane instrukcje warunkowe.
+
+	3. Command
+		🔹 Command – opis
+			# Command (pol. Polecenie) to wzorzec behawioralny, który zamienia żądanie w obiekt.
+				Dzięki temu:
+				możemy przekazywać polecenia jak dane,
+				kolejkować je,
+				cofać/ponawiać (undo/redo),
+				oddzielić obiekt, który wydaje polecenie, od obiektu, który je wykonuje.
+
+		🔹 Jaki problem rozwiązuje?
+
+			Wyobraź sobie pilota do telewizora:
+
+			przyciski pilota wydają polecenia (włącz, wyłącz, zmień kanał).
+
+			pilot nie musi wiedzieć, jak dokładnie telewizor działa – po prostu wysyła komendy.
+
+			👉 Dzięki wzorcowi Command mamy luźne powiązanie między nadawcą (Invoker – np. pilot) a odbiorcą (Receiver – np. telewizor).
+
+		🔹 Struktura
+			Command – interfejs polecenia, definiuje metodę execute().
+			ConcreteCommand – konkretne polecenie (np. WłączTV).
+			Receiver – obiekt, który wykonuje właściwe działanie (np. telewizor).
+			Invoker – obiekt, który wywołuje polecenie (np. pilot).
+			Client – konfiguruje polecenia, przypisuje je do invokera.
+
+		🔹 Przykład w Javie
+			Scenariusz: pilot sterujący światłem w pokoju.
+			# Kod
+				// Command
+				interface Command {
+				    void execute();
+				}
+
+				// Receiver
+				class Light {
+				    public void turnOn() {
+				        System.out.println("💡 Światło włączone");
+				    }
+
+				    public void turnOff() {
+				        System.out.println("💡 Światło wyłączone");
+				    }
+				}
+
+				// ConcreteCommands
+				class TurnOnLightCommand implements Command {
+				    private Light light;
+
+				    public TurnOnLightCommand(Light light) {
+				        this.light = light;
+				    }
+
+				    @Override
+				    public void execute() {
+				        light.turnOn();
+				    }
+				}
+
+				class TurnOffLightCommand implements Command {
+				    private Light light;
+
+				    public TurnOffLightCommand(Light light) {
+				        this.light = light;
+				    }
+
+				    @Override
+				    public void execute() {
+				        light.turnOff();
+				    }
+				}
+
+				// Invoker
+				class RemoteControl {
+				    private Command command;
+
+				    public void setCommand(Command command) {
+				        this.command = command;
+				    }
+
+				    public void pressButton() {
+				        command.execute();
+				    }
+				}
+
+				// Client
+				public class CommandExample {
+				    public static void main(String[] args) {
+				        Light light = new Light();
+
+				        Command turnOn = new TurnOnLightCommand(light);
+				        Command turnOff = new TurnOffLightCommand(light);
+
+				        RemoteControl remote = new RemoteControl();
+
+				        remote.setCommand(turnOn);
+				        remote.pressButton();  // 💡 Światło włączone
+
+				        remote.setCommand(turnOff);
+				        remote.pressButton();  // 💡 Światło wyłączone
+				    }
+				}
+
+				}
+
+		🔹 Zalety Command
+		    Oddzielenie obiektu żądającego (Invoker) od wykonawcy (Receiver).
+		    Łatwo dodawać nowe polecenia bez zmiany istniejącego kodu.
+		    Obsługuje kolejkowanie i historię poleceń (np. undo/redo).
+		    Elastyczne przypisywanie akcji do przycisków/menu.
+
+	4. Chain of Responsibility
+		🔹 Chain of Responsibility – opis
+			# Chain of Responsibility (pol. Łańcuch zobowiązań) to wzorzec behawioralny, który pozwala przekazywać żądanie wzdłuż łańcucha obiektów, aż któryś je obsłuży.
+			# Każdy obiekt w łańcuchu:
+				- może obsłużyć żądanie,
+				- albo przekazuje je dalej do następnego elementu.
+
+		🔹 Jaki problem rozwiązuje?
+			- Eliminuje duże bloki if-else sprawdzające „kto powinien obsłużyć żądanie”.
+			- Pozwala dodawać nowych obsługujących bez zmiany istniejącego kodu.
+			- Umożliwia dynamiczne konfigurowanie kolejności obsługi.
+			- Przykład życia codziennego:
+			- Masz pytanie w firmie → najpierw pytasz kolegę, jeśli nie zna → kierownik → dyrektor → prezes.
+			- Każdy w „łańcuchu” decyduje, czy obsłużyć sprawę, czy przekazać wyżej.
+
+		🔹 Struktura
+			- Handler – interfejs/abstrakcyjna klasa dla elementów łańcucha (ma referencję do następnego).
+			- ConcreteHandler – konkretne implementacje obsługujące lub przekazujące dalej.
+			- Client – wysyła żądanie do pierwszego elementu łańcucha.
+
+		🔹 Przykład w Javie
+			# Scenariusz: system zatwierdzania wydatków (pracownik, kierownik, dyrektor).
+				// Handler
+				abstract class Approver {
+				    protected Approver next;
+
+				    public void setNext(Approver next) {
+				        this.next = next;
+				    }
+
+				    public abstract void approve(int amount);
+				}
+
+				// ConcreteHandlers
+				class Employee extends Approver {
+				    @Override
+				    public void approve(int amount) {
+				        if (amount <= 100) {
+				            System.out.println("Pracownik zatwierdził wydatek: " + amount + " zł");
+				        } else if (next != null) {
+				            next.approve(amount);
+				        }
+				    }
+				}
+
+				class Manager extends Approver {
+				    @Override
+				    public void approve(int amount) {
+				        if (amount <= 1000) {
+				            System.out.println("Kierownik zatwierdził wydatek: " + amount + " zł");
+				        } else if (next != null) {
+				            next.approve(amount);
+				        }
+				    }
+				}
+
+				class Director extends Approver {
+				    @Override
+				    public void approve(int amount) {
+				        if (amount <= 10000) {
+				            System.out.println("Dyrektor zatwierdził wydatek: " + amount + " zł");
+				        } else {
+				            System.out.println("Wydatek " + amount + " zł wymaga specjalnego zatwierdzenia!");
+				        }
+				    }
+				}
+
+				// Client
+				public class ChainOfResponsibilityExample {
+				    public static void main(String[] args) {
+				        // Tworzymy łańcuch
+				        Approver employee = new Employee();
+				        Approver manager = new Manager();
+				        Approver director = new Director();
+
+				        employee.setNext(manager);
+				        manager.setNext(director);
+
+				        // Testujemy różne wydatki
+				        employee.approve(50);     // obsłuży pracownik
+				        employee.approve(500);    // obsłuży kierownik
+				        employee.approve(5000);   // obsłuży dyrektor
+				        employee.approve(20000);  // brak obsługi w łańcuchu
+				    }
+				}
+
+		🔹 Wynik działania
+			Pracownik zatwierdził wydatek: 50 zł
+			Kierownik zatwierdził wydatek: 500 zł
+			Dyrektor zatwierdził wydatek: 5000 zł
+			Wydatek 20000 zł wymaga specjalnego zatwierdzenia!
+
+		🔹 Zalety Chain of Responsibility
+			- Luźne powiązanie – obiekty nie muszą znać całej logiki, tylko swojego następcy.
+			- Elastyczne rozszerzanie – łatwo dodawać nowe „ogniwa” łańcucha.
+			- Reużywalność kodu – poszczególne obsługujące mogą działać w różnych łańcuchach.
+
+	5. State
+		🔹 State – opis
+			# State (pol. Stan) to wzorzec behawioralny, który pozwala obiektowi zmieniać swoje zachowanie w zależności od stanu, w którym się znajduje.
+			# W praktyce oznacza to, że zamiast ogromnego if-else/switch w klasie, logikę przenosimy do osobnych klas reprezentujących konkretne stany.
+
+		🔹 Jaki problem rozwiązuje?
+			# Bez wzorca State:
+				➡ Kod szybko staje się trudny do utrzymania.
+				# Kod
+					if (state == "draft") { ... }
+					else if (state == "published") { ... }
+					else if (state == "archived") { ... }
+
+			# Z State:
+				- Każdy stan ma własną klasę.
+				- Obiekt kontekstu deleguje zachowanie do aktualnego stanu.
+				- Możemy łatwo dodawać nowe stany, bez modyfikowania istniejących.
+
+		🔹 Struktura
+			State – interfejs dla stanów.
+			ConcreteState – konkretne implementacje stanu (np. PlayingState, PausedState).
+			Context – obiekt przechowujący aktualny stan, deleguje do niego zachowanie.
+
+		🔹 Przykład w Javie
+			# Scenariusz: odtwarzacz muzyki (stany: Odtwarzanie, Pauza, Stop).
+			# Kod
+				// State
+				interface PlayerState {
+				    void play(Player player);
+				    void pause(Player player);
+				    void stop(Player player);
+				}
+
+				// ConcreteStates
+				class PlayingState implements PlayerState {
+				    @Override
+				    public void play(Player player) {
+				        System.out.println("🎵 Już odtwarzam muzykę!");
+				    }
+
+				    @Override
+				    public void pause(Player player) {
+				        System.out.println("⏸ Pauza");
+				        player.setState(new PausedState());
+				    }
+
+				    @Override
+				    public void stop(Player player) {
+				        System.out.println("⏹ Stop");
+				        player.setState(new StoppedState());
+				    }
+				}
+
+				class PausedState implements PlayerState {
+				    @Override
+				    public void play(Player player) {
+				        System.out.println("▶ Wznawiam odtwarzanie");
+				        player.setState(new PlayingState());
+				    }
+
+				    @Override
+				    public void pause(Player player) {
+				        System.out.println("⏸ Już jest pauza!");
+				    }
+
+				    @Override
+				    public void stop(Player player) {
+				        System.out.println("⏹ Zatrzymuję");
+				        player.setState(new StoppedState());
+				    }
+				}
+
+				class StoppedState implements PlayerState {
+				    @Override
+				    public void play(Player player) {
+				        System.out.println("▶ Start odtwarzania");
+				        player.setState(new PlayingState());
+				    }
+
+				    @Override
+				    public void pause(Player player) {
+				        System.out.println("⏸ Nie można pauzować – nic nie gra!");
+				    }
+
+				    @Override
+				    public void stop(Player player) {
+				        System.out.println("⏹ Już jest zatrzymany!");
+				    }
+				}
+
+				// Context
+				class Player {
+				    private PlayerState state;
+
+				    public Player() {
+				        this.state = new StoppedState(); // stan początkowy
+				    }
+
+				    public void setState(PlayerState state) {
+				        this.state = state;
+				    }
+
+				    public void play() {
+				        state.play(this);
+				    }
+
+				    public void pause() {
+				        state.pause(this);
+				    }
+
+				    public void stop() {
+				        state.stop(this);
+				    }
+				}
+
+				// Client
+				public class StateExample {
+				    public static void main(String[] args) {
+				        Player player = new Player();
+
+				        player.play();   // ▶ Start odtwarzania
+				        player.pause();  // ⏸ Pauza
+				        player.play();   // ▶ Wznawiam odtwarzanie
+				        player.stop();   // ⏹ Stop
+				        player.pause();  // ⏸ Nie można pauzować – nic nie gra!
+				    }
+				}
+
+		🔹 Wynik działania
+			▶ Start odtwarzania
+			⏸ Pauza
+			▶ Wznawiam odtwarzanie
+			⏹ Stop
+			⏸ Nie można pauzować – nic nie gra!
+
+		🔹 Zalety State
+			- Eliminacja długich instrukcji warunkowych.
+			- Łatwe dodawanie nowych stanów.
+			- Kod staje się bardziej czytelny i zgodny z zasadą Open/Closed.
+			- Każdy stan jest zamknięty w swojej klasie → większa spójność.
+
+	6. Template Method
+		🔹 Template Method – opis
+			- Template Method (pol. Metoda Szablonowa) to wzorzec behawioralny, który pozwala zdefiniować szkielet algorytmu
+				w metodzie bazowej, a szczegóły jego kroków pozostawić do implementacji w klasach pochodnych.
+
+		👉 Innymi słowy:
+			- Klasa bazowa zawiera algorytm ogólny (kolejność kroków).
+			- Podklasy mogą nadpisywać poszczególne kroki bez zmieniania struktury całego algorytmu.
+
+		🔹 Jaki problem rozwiązuje?
+			- Kiedy różne klasy mają podobny algorytm z drobnymi różnicami.
+			- Zamiast duplikować kod → wyciągamy wspólną część do klasy bazowej.
+			- Zasada Hollywood Principle: „Don’t call us, we’ll call you” – klasa bazowa decyduje, kiedy wywoła metody podklas.
+
+		🔹 Struktura
+			- AbstractClass – definiuje szkielet algorytmu (metoda szablonowa) i abstrakcyjne „kroki”.
+			- ConcreteClass – implementuje szczegóły kroków.
+
+		🔹 Przykład w Javie
+			- Scenariusz: proces parzenia napojów (herbata i kawa).
+			# Kod
+				// AbstractClass
+				abstract class Beverage {
+				    // Template Method (szkielet algorytmu)
+				    public final void prepareRecipe() {
+				        boilWater();
+				        brew();
+				        pourInCup();
+				        addCondiments();
+				    }
+
+				    private void boilWater() {
+				        System.out.println("Gotuję wodę");
+				    }
+
+				    private void pourInCup() {
+				        System.out.println("Wlewam do kubka");
+				    }
+
+				    // Kroki abstrakcyjne (do implementacji w podklasach)
+				    protected abstract void brew();
+				    protected abstract void addCondiments();
+				}
+
+				// ConcreteClass 1
+				class Tea extends Beverage {
+				    @Override
+				    protected void brew() {
+				        System.out.println("Zaparzam herbatę");
+				    }
+
+				    @Override
+				    protected void addCondiments() {
+				        System.out.println("Dodaję cytrynę");
+				    }
+				}
+
+				// ConcreteClass 2
+				class Coffee extends Beverage {
+				    @Override
+				    protected void brew() {
+				        System.out.println("Zaparzam kawę");
+				    }
+
+				    @Override
+				    protected void addCondiments() {
+				        System.out.println("Dodaję cukier i mleko");
+				    }
+				}
+
+				// Client
+				public class TemplateMethodExample {
+				    public static void main(String[] args) {
+				        System.out.println("☕ Przygotowuję kawę:");
+				        Beverage coffee = new Coffee();
+				        coffee.prepareRecipe();
+
+				        System.out.println("\n🍵 Przygotowuję herbatę:");
+				        Beverage tea = new Tea();
+				        tea.prepareRecipe();
+				    }
+				}
+
+		🔹 Wynik działania
+			☕ Przygotowuję kawę:
+			Gotuję wodę
+			Zaparzam kawę
+			Wlewam do kubka
+			Dodaję cukier i mleko
+
+			🍵 Przygotowuję herbatę:
+			Gotuję wodę
+			Zaparzam herbatę
+			Wlewam do kubka
+			Dodaję cytrynę
+
+		🔹 Zalety Template Method
+			- Reużywalność kodu – wspólne kroki są w klasie bazowej.
+			- Łatwo rozszerzać – nowe warianty algorytmu w podklasach.
+			- Zachowana spójna struktura algorytmu.
+
+
+	7. Mediator
+		🔹 Mediator – opis
+			- Mediator (pol. Mediator) to wzorzec behawioralny, który centralizuje komunikację pomiędzy obiektami, tak aby nie musiały
+				one odwoływać się bezpośrednio do siebie.
+			👉 Zamiast tego każdy obiekt (tzw. Colleague) komunikuje się przez Mediatora.
+
+		🔹 Jaki problem rozwiązuje?
+			# Bez Mediatora:
+				- wiele obiektów komunikuje się bezpośrednio, co prowadzi do gęstej sieci zależności („spaghetti komunikacyjne”).
+				- trudniej zmieniać logikę interakcji, bo trzeba modyfikować wszystkie klasy.
+
+			# Z Mediatorem:
+				- obiekty znają tylko Mediatora, nie siebie nawzajem.
+				- logika komunikacji jest scentralizowana i łatwiejsza w utrzymaniu.
+
+			# Przykład życia:
+				- Wieża kontrolna na lotnisku – samoloty nie rozmawiają ze sobą bezpośrednio, tylko przez wieżę (mediatora).
+
+		🔹 Struktura
+			- Mediator – interfejs pośrednika.
+			- ConcreteMediator – implementacja mediatora, zarządza komunikacją.
+			- Colleague – interfejs/abstrakcja uczestników.
+			- ConcreteColleague – klasy uczestników, które komunikują się przez Mediatora.
+
+		🔹 Przykład w Javie
+			# Scenariusz: czat między użytkownikami.
+			# Kod
+				import java.util.ArrayList;
+				import java.util.List;
+
+				// Mediator
+				interface ChatMediator {
+				    void sendMessage(String message, User sender);
+				    void addUser(User user);
+				}
+
+				// ConcreteMediator
+				class ChatRoom implements ChatMediator {
+				    private List<User> users = new ArrayList<>();
+
+				    @Override
+				    public void addUser(User user) {
+				        users.add(user);
+				    }
+
+				    @Override
+				    public void sendMessage(String message, User sender) {
+				        for (User user : users) {
+				            if (user != sender) { // nie wysyłamy wiadomości do samego siebie
+				                user.receive(message, sender);
+				            }
+				        }
+				    }
+				}
+
+				// Colleague
+				abstract class User {
+				    protected ChatMediator mediator;
+				    protected String name;
+
+				    public User(ChatMediator mediator, String name) {
+				        this.mediator = mediator;
+				        this.name = name;
+				    }
+
+				    public abstract void send(String message);
+				    public abstract void receive(String message, User sender);
+				}
+
+				// ConcreteColleague
+				class ChatUser extends User {
+				    public ChatUser(ChatMediator mediator, String name) {
+				        super(mediator, name);
+				    }
+
+				    @Override
+				    public void send(String message) {
+				        System.out.println(name + " wysyła: " + message);
+				        mediator.sendMessage(message, this);
+				    }
+
+				    @Override
+				    public void receive(String message, User sender) {
+				        System.out.println(name + " otrzymał od " + sender.name + ": " + message);
+				    }
+				}
+
+				// Client
+				public class MediatorExample {
+				    public static void main(String[] args) {
+				        ChatMediator chat = new ChatRoom();
+
+				        User user1 = new ChatUser(chat, "Jan");
+				        User user2 = new ChatUser(chat, "Anna");
+				        User user3 = new ChatUser(chat, "Kasia");
+
+				        chat.addUser(user1);
+				        chat.addUser(user2);
+				        chat.addUser(user3);
+
+				        user1.send("Cześć wszystkim!");
+				        user2.send("Hej Jan!");
+				    }
+				}
+
+			🔹 Wynik działania
+				Jan wysyła: Cześć wszystkim!
+				Anna otrzymał od Jan: Cześć wszystkim!
+				Kasia otrzymał od Jan: Cześć wszystkim!
+
+				Anna wysyła: Hej Jan!
+				Jan otrzymał od Anna: Hej Jan!
+				Kasia otrzymał od Anna: Hej Jan!
+
+			🔹 Zalety Mediator
+				- Redukuje złożoność relacji między obiektami (luźne powiązanie).
+				- Ułatwia modyfikację logiki komunikacji (zmiana tylko w Mediatorze).
+				- Większa przejrzystość systemu.
+
+
+
+	8. Memento
+		🔹 Memento – opis
+			# Memento (pol. Pamiątka) to wzorzec behawioralny, który umożliwia zapisywanie i przywracanie stanu obiektu bez naruszania jego enkapsulacji.
+			👉 Innymi słowy:
+				- Możemy cofnąć się do poprzedniego stanu obiektu (undo/rollback).
+				- Stan obiektu jest przechowywany w specjalnym obiekcie Memento.
+
+		🔹 Jaki problem rozwiązuje?
+			# Czasami chcemy dodać możliwość cofania operacji (np. edytor tekstu, gry, transakcje).
+			# Nie chcemy ujawniać całej wewnętrznej logiki obiektu (enkapsulacja).
+			# Rozwiązanie:
+				- Tworzymy obiekt Memento, który przechowuje stan.
+				- Klasa Originator tworzy i odtwarza stan z Memento.
+				- Klasa Caretaker zarządza historią Memento (np. stos undo).
+
+		🔹 Struktura
+			- Originator – obiekt, którego stan zapisujemy.
+			- Memento – pamiątka przechowująca stan.
+			- Caretaker – zarządza historią Memento (np. przywraca wcześniejsze stany).
+
+		🔹 Przykład w Javie
+			# Scenariusz: prosty edytor tekstu z funkcją undo.
+			# Kod
+				import java.util.Stack;
+
+				// Memento
+				class TextMemento {
+				    private final String state;
+
+				    public TextMemento(String state) {
+				        this.state = state;
+				    }
+
+				    public String getState() {
+				        return state;
+				    }
+				}
+
+				// Originator
+				class TextEditor {
+				    private String text = "";
+
+				    public void write(String newText) {
+				        text += newText;
+				    }
+
+				    public String getText() {
+				        return text;
+				    }
+
+				    // Tworzy memento (snapshot)
+				    public TextMemento save() {
+				        return new TextMemento(text);
+				    }
+
+				    // Przywraca stan z memento
+				    public void restore(TextMemento memento) {
+				        text = memento.getState();
+				    }
+				}
+
+				// Caretaker
+				class History {
+				    private Stack<TextMemento> history = new Stack<>();
+
+				    public void save(TextEditor editor) {
+				        history.push(editor.save());
+				    }
+
+				    public void undo(TextEditor editor) {
+				        if (!history.isEmpty()) {
+				            TextMemento memento = history.pop();
+				            editor.restore(memento);
+				        }
+				    }
+				}
+
+				// Client
+				public class MementoExample {
+				    public static void main(String[] args) {
+				        TextEditor editor = new TextEditor();
+				        History history = new History();
+
+				        editor.write("Hello");
+				        history.save(editor);
+
+				        editor.write(" World!");
+				        history.save(editor);
+
+				        System.out.println("Aktualny tekst: " + editor.getText());
+
+				        history.undo(editor);
+				        System.out.println("Po cofnięciu: " + editor.getText());
+
+				        history.undo(editor);
+				        System.out.println("Po kolejnym cofnięciu: " + editor.getText());
+				    }
+				}
+
+
+
+	9. Iterator
+	🔹 Iterator – opis
+		- Iterator (pol. Iterator) to wzorzec behawioralny, który umożliwia sekwencyjny dostęp do elementów kolekcji bez ujawniania jej wewnętrznej struktury.
+		- 👉 Innymi słowy: Iterator pozwala przechodzić po elementach np. listy, zbioru, tablicy, nie wiedząc jak kolekcja jest zaimplementowana.
+
+	🔹 Jaki problem rozwiązuje?
+		- Bez Iteratora: trzeba znać szczegóły struktury danych (np. tablica, lista, drzewo), żeby ją przeszukiwać.
+		- Iterator oddziela logikę przechodzenia od samej kolekcji.
+		- Umożliwia jednolity sposób iteracji po różnych typach kolekcji.
+		- Przykład życia codziennego:
+		- Czytasz książkę – nie interesuje Cię, jak kartki są włożone, po prostu przewracasz je jedna po drugiej.
+
+	🔹 Struktura
+		- Iterator – interfejs z metodami hasNext() i next().
+		- ConcreteIterator – implementacja iteratora dla konkretnej kolekcji.
+		- Aggregate – interfejs dla kolekcji, która może udostępniać iterator.
+		- ConcreteAggregate – implementacja kolekcji.
+
+	🔹 Przykład w Javie
+		# Scenariusz: własna kolekcja z iteratorami.
+		# Kod
+			import java.util.ArrayList;
+			import java.util.List;
+
+			// Iterator
+			interface MyIterator<T> {
+			    boolean hasNext();
+			    T next();
+			}
+
+			// Aggregate
+			interface MyCollection<T> {
+			    MyIterator<T> createIterator();
+			}
+
+			// ConcreteAggregate
+			class MyList<T> implements MyCollection<T> {
+			    private List<T> items = new ArrayList<>();
+
+			    public void add(T item) {
+			        items.add(item);
+			    }
+
+			    @Override
+			    public MyIterator<T> createIterator() {
+			        return new ListIterator();
+			    }
+
+			    // ConcreteIterator
+			    private class ListIterator implements MyIterator<T> {
+			        private int index = 0;
+
+			        @Override
+			        public boolean hasNext() {
+			            return index < items.size();
+			        }
+
+			        @Override
+			        public T next() {
+			            return items.get(index++);
+			        }
+			    }
+			}
+
+			// Client
+			public class IteratorExample {
+			    public static void main(String[] args) {
+			        MyList<String> list = new MyList<>();
+			        list.add("Jan");
+			        list.add("Anna");
+			        list.add("Kasia");
+
+			        MyIterator<String> iterator = list.createIterator();
+			        while (iterator.hasNext()) {
+			            System.out.println("Element: " + iterator.next());
+			        }
+			    }
+			}
+
+		🔹 Zalety Iterator
+			- Oddziela logikę iteracji od kolekcji → zmiana struktury kolekcji nie wymaga zmiany klienta.
+			- Jednolity interfejs do iteracji po różnych kolekcjach.
+			- Obsługuje różne typy przeszukiwania (od początku do końca, wstecz, filtrowanie itp.).
+
+
+	10. Interpreter
+		🔹 Interpreter – opis
+			# Interpreter to wzorzec behawioralny, który pozwala definiować gramatykę języka i interpretować zdania w tym języku.
+			# Każda reguła gramatyki jest reprezentowana przez klasę.
+			# Obiekt interpretuje dane wejściowe zgodnie z regułami.
+
+		🔹 Jaki problem rozwiązuje?
+			#  Potrzebujesz własnego języka, wyrażeń lub poleceń, które program ma interpretować.
+			#  Chcesz łatwo dodawać nowe reguły bez zmiany istniejących klas.
+			#  Przykłady:
+				- Prosty kalkulator wyrażeń matematycznych.
+				- Filtr w wyszukiwarce (price > 100 AND category = 'book').
+				- Mały język skryptowy w aplikacji.
+
+		🔹 Struktura
+			AbstractExpression – interfejs lub klasa abstrakcyjna dla wszystkich wyrażeń (interpret).
+			TerminalExpression – klasy reprezentujące elementy terminalne (np. liczby, literały).
+			NonTerminalExpression – klasy reprezentujące reguły gramatyki (np. operatory +, -, AND, OR).
+			Context – przechowuje dane potrzebne do interpretacji.
+
+		🔹 Przykład w Javie
+			// AbstractExpression
+			interface Expression {
+			    boolean interpret(int number);
+			}
+
+			// TerminalExpression: sprawdza czy liczba jest parzysta
+			class EvenExpression implements Expression {
+			    @Override
+			    public boolean interpret(int number) {
+			        return number % 2 == 0;
+			    }
+			}
+
+			// TerminalExpression: sprawdza czy liczba jest większa od określonej
+			class GreaterThanExpression implements Expression {
+			    private int limit;
+
+			    public GreaterThanExpression(int limit) {
+			        this.limit = limit;
+			    }
+
+			    @Override
+			    public boolean interpret(int number) {
+			        return number > limit;
+			    }
+			}
+
+			// NonTerminalExpression: łączy dwa wyrażenia operatorem AND
+			class AndExpression implements Expression {
+			    private Expression expr1;
+			    private Expression expr2;
+
+			    public AndExpression(Expression expr1, Expression expr2) {
+			        this.expr1 = expr1;
+			        this.expr2 = expr2;
+			    }
+
+			    @Override
+			    public boolean interpret(int number) {
+			        return expr1.interpret(number) && expr2.interpret(number);
+			    }
+			}
+
+			// Client
+			public class InterpreterExample {
+			    public static void main(String[] args) {
+			        Expression isEven = new EvenExpression();
+			        Expression greaterThanTen = new GreaterThanExpression(10);
+			        Expression evenAndGreaterThanTen = new AndExpression(isEven, greaterThanTen);
+
+			        int[] numbers = {4, 11, 14, 9, 20};
+
+			        for (int n : numbers) {
+			            if (evenAndGreaterThanTen.interpret(n)) {
+			                System.out.println(n + " spełnia warunek (parzysta i > 10)");
+			            } else {
+			                System.out.println(n + " nie spełnia warunku");
+			            }
+			        }
+			    }
+			}
+
+		🔹 Wynik działania
+			4 nie spełnia warunku
+			11 nie spełnia warunku
+			14 spełnia warunek (parzysta i > 10)
+			9 nie spełnia warunku
+			20 spełnia warunek (parzysta i > 10)
+
+		🔹 Zalety Interpreter
+			- Łatwość dodawania nowych reguł gramatyki.
+			- Kod jest czytelny i modularny – każda reguła w osobnej klasie.
+			- Naturalne odwzorowanie języków formalnych i prostych DSL (Domain Specific Language).
+
+		🔹 Wady
+			- Może prowadzić do dużej liczby klas przy rozbudowanej gramatyce.
+			- Nie zawsze efektywny dla bardzo dużych wyrażeń – wymaga optymalizacji.
+
+
+	11. Visitor
+		🔹 Visitor – opis
+			# Visitor to wzorzec behawioralny, który pozwala dodać nowe operacje do obiektów bez zmieniania ich klas.
+			# Logika działania jest oddzielona od struktur obiektów.
+			# Obiekt przyjmuje „odwiedzającego” (Visitor), który wykonuje operację na jego danych.
+
+		🔹 Jaki problem rozwiązuje?
+			# Masz hierarchię klas, a chcesz dodać nowe operacje.
+			# Nie chcesz modyfikować wszystkich klas (zasada Open/Closed).
+			# Typowe zastosowania:
+				- raportowanie danych,
+				- przetwarzanie drzew lub struktur złożonych,
+				- serializacja obiektów.
+
+		🔹 Struktura
+			# Visitor – interfejs odwiedzającego (visit dla każdej klasy elementu).
+			# ConcreteVisitor – implementacja operacji.
+			# Element – interfejs elementu, który może zostać odwiedzony (accept).
+			# ConcreteElement – klasy implementujące element.
+			# ObjectStructure – zbiór elementów, które mogą być odwiedzane.
+
+		🔹 Przykład w Javie
+				// Visitor
+				interface Visitor {
+				    void visit(Book book);
+				    void visit(Fruit fruit);
+				}
+
+				// ConcreteVisitor
+				class PriceVisitor implements Visitor {
+				    @Override
+				    public void visit(Book book) {
+				        System.out.println("Książka: " + book.getName() + " kosztuje " + book.getPrice() + " zł");
+				    }
+
+				    @Override
+				    public void visit(Fruit fruit) {
+				        System.out.println("Owoc: " + fruit.getName() + " kosztuje " + fruit.getPrice() + " zł");
+				    }
+				}
+
+				// Element
+				interface Item {
+				    void accept(Visitor visitor);
+				}
+
+				// ConcreteElements
+				class Book implements Item {
+				    private String name;
+				    private double price;
+
+				    public Book(String name, double price) {
+				        this.name = name;
+				        this.price = price;
+				    }
+
+				    public String getName() { return name; }
+				    public double getPrice() { return price; }
+
+				    @Override
+				    public void accept(Visitor visitor) {
+				        visitor.visit(this);
+				    }
+				}
+
+				class Fruit implements Item {
+				    private String name;
+				    private double price;
+
+				    public Fruit(String name, double price) {
+				        this.name = name;
+				        this.price = price;
+				    }
+
+				    public String getName() { return name; }
+				    public double getPrice() { return price; }
+
+				    @Override
+				    public void accept(Visitor visitor) {
+				        visitor.visit(this);
+				    }
+				}
+
+				// Client
+				public class VisitorExample {
+				    public static void main(String[] args) {
+				        Item[] items = {
+				            new Book("Java Podstawy", 50),
+				            new Fruit("Jabłko", 3),
+				            new Fruit("Banan", 4)
+				        };
+
+				        Visitor priceVisitor = new PriceVisitor();
+
+				        for (Item item : items) {
+				            item.accept(priceVisitor);
+				        }
+				    }
+				}
+
+		🔹 Wynik działania
+			Książka: Java Podstawy kosztuje 50.0 zł
+			Owoc: Jabłko kosztuje 3.0 zł
+			Owoc: Banan kosztuje 4.0 zł
+
+		🔹 Zalety Visitor
+			- Możliwość dodawania nowych operacji bez modyfikacji istniejących klas.
+			- Logika działania jest oddzielona od danych.
+			- Przydatny przy pracy z drzewiastymi strukturami (Composite + Visitor).
+
+		🔹 Wady
+			- Dodanie nowego typu elementu wymaga modyfikacji wszystkich Visitorów.
+			- Może wprowadzać większą liczbę klas – wzorzec bardziej przydatny przy dużych strukturach.
+
