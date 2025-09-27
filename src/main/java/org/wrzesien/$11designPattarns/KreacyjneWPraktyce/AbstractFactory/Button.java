@@ -1,5 +1,5 @@
 package org.wrzesien.$11designPattarns.KreacyjneWPraktyce.AbstractFactory;
 
 public interface Button {
-	String render();
+	String paint();
 }

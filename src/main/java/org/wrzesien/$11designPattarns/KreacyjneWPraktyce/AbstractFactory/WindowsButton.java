@@ -1,7 +1,7 @@
 package org.wrzesien.$11designPattarns.KreacyjneWPraktyce.AbstractFactory;
 
 public class WindowsButton implements Button {
-	public String render() {
+	public String paint() {
 		return "Windows Button";
 	}
 }
