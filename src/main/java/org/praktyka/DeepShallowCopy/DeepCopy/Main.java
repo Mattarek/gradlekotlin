@@ -9,10 +9,11 @@ public class Main {
 		hobbies.add("Pływanie");
 		hobbies.add("Czytanie");
 
-		final Person jan = new Person("Jan", hobbies);
+		final Person jan = new Person("Jan", hobbies, 18);
 		final Person anna = jan.copy();
 
 		anna.addHobby("Bieganie");
+		anna.addHobby("Skakanie");
 
 		jan.show();
 		anna.show();

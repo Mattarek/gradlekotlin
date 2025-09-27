@@ -143,6 +143,52 @@
 				- Może prowadzić do ukrytych zależności w kodzie (tzw. “global state”).
 				- Nadmierne użycie może powodować problemy z projektowaniem (krytyczny punkt sprzężenia w systemie).
 
+			# Eager Singleton vs Lazy Singleton
+				# Eager Singleton (chętny – od razu tworzony)
+					- Instancja Singletona jest tworzona od razu, przy załadowaniu klasy.
+					- Jest proste i thread-safe bez dodatkowej synchronizacji.
+						# Kod
+						class EagerSingleton {
+						    private static final EagerSingleton INSTANCE = new EagerSingleton();
+
+						    private EagerSingleton() {}
+
+						    public static EagerSingleton getInstance() {
+						        return INSTANCE;
+						    }
+						}
+
+					Zalety:
+						- Proste, bez synchronizacji.
+						- Instancja zawsze gotowa do użycia.
+
+					Wady:
+						- Tworzony od razu, nawet jeśli nigdzie nie jest używany → może być marnotrawstwo pamięci.
+
+				# Lazy Singleton (leniwy – tworzony dopiero przy potrzebie)
+					- Instancja jest tworzona dopiero przy pierwszym wywołaniu getInstance().
+					- Wymaga synchronizacji w wersji wielowątkowej.
+						# Kod
+							class LazySingleton {
+							    private static LazySingleton instance;
+
+							    private LazySingleton() {}
+
+							    public static synchronized LazySingleton getInstance() {
+							        if (instance == null) {
+							            instance = new LazySingleton();
+							        }
+							        return instance;
+							    }
+							}
+
+					Zalety:
+						- Oszczędność zasobów – instancja tworzona tylko jeśli potrzebna.
+
+					Wady:
+						- Synchronizacja może wprowadzać lekkie opóźnienie (można użyć „double-checked locking” dla optymalizacji).
+
+
 
 	2. Builder
 		# Kategoria: Kreacyjny
