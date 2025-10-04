@@ -1,4 +1,4 @@
-package org.pazdziernik.SpringApplicationTesting;
+package org.pazdziernik.Testowanie.SpringApplicationTesting;
 
 import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.Configuration;

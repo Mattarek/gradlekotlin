@@ -1,4 +1,4 @@
-package org.pazdziernik.MockVsStub;
+package org.pazdziernik.Testowanie.MockVsStub;
 
 public class WeatherReporter {
 	private final WeatherService weatherService;

@@ -1,4 +1,4 @@
-package org.pazdziernik.SpringApplicationTesting;
+package org.pazdziernik.Testowanie.SpringApplicationTesting;
 
 public class ExampleBeanServiceImpl implements ExampleBeanService {
 	private InjectedBeanService injectedBeanService;
