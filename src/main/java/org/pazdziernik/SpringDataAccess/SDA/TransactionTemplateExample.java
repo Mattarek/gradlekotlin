@@ -6,9 +6,7 @@ import org.springframework.jdbc.core.namedparam.BeanPropertySqlParameterSource;
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
 import org.springframework.jdbc.datasource.SimpleDriverDataSource;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.TransactionStatus;
-import org.springframework.transaction.support.TransactionCallback;
-import org.springframework.transaction.support.TransactionCallbackWithoutResult;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.transaction.support.TransactionTemplate;
 
 @Slf4j
@@ -31,9 +29,25 @@ public class TransactionTemplateExample {
 	public void exampleTwo() {
 	}
 
+	//	private Integer someMethod() {
+	//		int result = 0;
+	//
+	//		final NamedParameterJdbcTemplate jdbcTemplate = new NamedParameterJdbcTemplate(simpleDriverDataSource);
+	//
+	//		final Person personOne = Person.builder().name("Roman").age(55).build();
+	//		final Person personTwo = Person.builder().name("Tomasz").age(22).build();
+	//		final Person personThree = Person.builder().name("Roman").age(21).build();
+	//
+	//		result += jdbcTemplate.update(SQL, new BeanPropertySqlParameterSource(personOne));
+	//		result += jdbcTemplate.update(SQL, new BeanPropertySqlParameterSource(personTwo));
+	//		result += jdbcTemplate.update(SQL, new BeanPropertySqlParameterSource(personThree));
+	//
+	//		return result;
+	//	}
+
+	@Transactional
 	private Integer someMethod() {
 		int result = 0;
-
 		final NamedParameterJdbcTemplate jdbcTemplate = new NamedParameterJdbcTemplate(simpleDriverDataSource);
 
 		final Person personOne = Person.builder().name("Roman").age(55).build();
