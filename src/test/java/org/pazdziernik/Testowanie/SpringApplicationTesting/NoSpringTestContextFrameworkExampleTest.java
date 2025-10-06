@@ -1,4 +1,4 @@
-package org.pazdziernik.SpringApplicationTesting;
+package org.pazdziernik.Testowanie.SpringApplicationTesting;
 
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Assertions;

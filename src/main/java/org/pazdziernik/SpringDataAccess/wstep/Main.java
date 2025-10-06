@@ -1,17 +1,22 @@
 package org.pazdziernik.SpringDataAccess.wstep;
 
-import java.sql.Connection;
-import java.sql.DriverManager;
-import java.sql.SQLException;
-import java.sql.Statement;
+import org.springframework.context.ApplicationContext;
+import org.springframework.context.annotation.AnnotationConfigApplicationContext;
+import org.springframework.jdbc.datasource.SimpleDriverDataSource;
 
 public class Main {
-	public static void main(final String[] args) throws SQLException {
-		final String url = "jdbc:postgresql://localhost:5432/zajavka";
-		final String user = "postgresql";
-		final String password = "postgresql";
+	public static void main(final String[] args) {
+		final ApplicationContext applicationContext =
+				new AnnotationConfigApplicationContext(DataSourceConfiguration.class);
+		final SampleJdbcInsertExample example = applicationContext.getBean(SampleJdbcInsertExample.class);
+		//		example.insert();
+		//		example.update();
+		//		example.delete();
+		//		example.select();
 
-		final Connection connection = DriverManager.getConnection(url, user, password);
-		final Statement statement = connection.createStatement();
+		//		example.smpleJdbcInsertExample();
+
+		final SimpleJdbcCallEample simpleJdbcCallEample = applicationContext.getBean(SimpleJdbcCallEample.class);
+		simpleJdbcCallEample.example();
 	}
 }

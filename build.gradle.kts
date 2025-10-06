@@ -16,10 +16,13 @@ repositories {
 	mavenCentral()
 }
 
-// ✅ Definicja wersji w Kotlin DSL
-val springVersion = "6.1.13"
+// ✅ Wersje dependencies
+val springVersion = "6.2.11"
 val lombokVersion = "1.18.34"
 val junitVersion = "5.11.2"
+val mockitoVersion = "5.14.2"
+val logbackVersion = "1.2.11"
+val postgresqlDriverVersion = "42.5.0"
 
 dependencies {
 	// Spring Core
@@ -28,31 +31,35 @@ dependencies {
 	implementation("org.springframework:spring-context:$springVersion")
 	implementation("org.springframework:spring-context-support:$springVersion")
 	implementation("org.springframework:spring-expression:$springVersion")
+	implementation("org.springframework:spring-jdbc:${springVersion}")
+
+	implementation("org.postgresql:postgresql:${postgresqlDriverVersion}")
+
+	// Spring Test (tu jest SpringExtension)
+	testImplementation("org.springframework:spring-test:$springVersion")
 
 	// Logowanie
-	implementation("ch.qos.logback:logback-classic:1.2.11")
+	implementation("ch.qos.logback:logback-classic:$logbackVersion")
 
 	// Lombok
 	compileOnly("org.projectlombok:lombok:$lombokVersion")
 	annotationProcessor("org.projectlombok:lombok:$lombokVersion")
 
-	// Testy
+	// JUnit 5
 	testImplementation("org.junit.jupiter:junit-jupiter:$junitVersion")
 
 	// Mockito
-	testImplementation("org.mockito:mockito-core:5.14.2")
-	testImplementation("org.mockito:mockito-junit-jupiter:5.14.2")
+	testImplementation("org.mockito:mockito-core:$mockitoVersion")
+	testImplementation("org.mockito:mockito-junit-jupiter:$mockitoVersion")
 }
 
 tasks.test {
 	useJUnitPlatform()
 	jvmArgs("-XX:+EnableDynamicAgentLoading")
 	testLogging {
-		showStandardStreams = false // nie wyświetla ostrzeżeń JVM
+		showStandardStreams = false
 		events("passed", "skipped", "failed")
 	}
-	useJUnitPlatform()
-	
 }
 
 jacoco {

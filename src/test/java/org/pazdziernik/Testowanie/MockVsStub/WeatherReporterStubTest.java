@@ -1,4 +1,4 @@
-package org.pazdziernik.MockVsStub;
+package org.pazdziernik.Testowanie.MockVsStub;
 
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
