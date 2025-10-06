@@ -6,9 +6,6 @@ import org.springframework.jdbc.core.simple.SimpleJdbcInsert;
 import org.springframework.jdbc.datasource.SimpleDriverDataSource;
 import org.springframework.stereotype.Repository;
 
-import java.util.HashMap;
-import java.util.Map;
-
 @Repository
 @RequiredArgsConstructor
 public class SampleJdbcInsertExample {
