@@ -8,6 +8,5 @@ public class Main {
 		final ApplicationContext context = new AnnotationConfigApplicationContext(DataSourceConfiguration.class);
 
 		final TransactionTemplateExample jdbcTemplateExamplate = context.getBean(TransactionTemplateExample.class);
-		jdbcTemplateExamplate.exampleOne();
 	}
 }
