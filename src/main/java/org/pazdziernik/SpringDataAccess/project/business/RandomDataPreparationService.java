@@ -6,32 +6,37 @@ import org.pazdziernik.SpringDataAccess.project.domain.Producer;
 import org.pazdziernik.SpringDataAccess.project.domain.Product;
 import org.pazdziernik.SpringDataAccess.project.domain.Purchase;
 
+import java.time.LocalDate;
+import java.time.OffsetDateTime;
+import java.time.ZoneOffset;
+
 public class RandomDataPreparationService {
 	Customer createCustomer() {
+		final String name = "";
 		return Customer.builder()
-				.userName()
-				.email()
-				.name()
-				.surname()
-				.dateOfBirth()
-				.telephoneNumber()
+				.userName(name + " user")
+				.email(name + "@gmail.com")
+				.name(name)
+				.surname("surname")
+				.dateOfBirth(LocalDate.of(1991, 10, 2))
+				.telephoneNumber("+" + randomString())
 				.build();
 	}
 
-	Opinion createOpinion() {
+	Opinion createOpinion(final Customer customer, final Product product) {
 		return Opinion.builder()
-				.customer()
-				.product()
-				.stars()
-				.comment()
-				.dateTime()
+				.customer(customer)
+				.product(product)
+				.stars((byte) 4)
+				.comment("My comment")
+				.dateTime(OffsetDateTime.of(2020, 1, 1, 12, 9, 10, 1, ZoneOffset.ofHours(4)))
 				.build();
 	}
 
 	Producer createProducer() {
 		return Producer.builder()
-				.producerName()
-				.address()
+				.producerName(randomString())
+				.address("someAddress")
 				.build();
 	}
 
