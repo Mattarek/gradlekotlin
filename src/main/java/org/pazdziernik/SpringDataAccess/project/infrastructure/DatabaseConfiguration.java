@@ -18,7 +18,6 @@ public class DatabaseConfiguration {
 		dataSource.setUrl("jdbc:postgresql://localhost:5432/zajavka_store");
 		dataSource.setUsername("postgres");
 		dataSource.setPassword("postgres");
-		System.out.println(dataSource);
 		return dataSource;
 	}
 

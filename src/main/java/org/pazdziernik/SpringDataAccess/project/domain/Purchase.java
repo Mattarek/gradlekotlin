@@ -6,6 +6,8 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.With;
 
+import java.time.OffsetDateTime;
+
 @With
 @Builder
 @Data
@@ -16,5 +18,5 @@ public class Purchase {
 	private String customerId;
 	private String productId;
 	private String quantity;
-	private String dateTime;
+	private OffsetDateTime dateTime;
 }

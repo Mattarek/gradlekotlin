@@ -12,4 +12,7 @@ import lombok.With;
 @NoArgsConstructor
 @AllArgsConstructor
 public class Producer {
+	private String id;
+	private String producerName;
+	private String address;
 }

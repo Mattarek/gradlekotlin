@@ -6,6 +6,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.With;
 
+import java.math.BigDecimal;
 import java.time.LocalDate;
 
 @With
@@ -14,11 +15,11 @@ import java.time.LocalDate;
 @NoArgsConstructor
 @AllArgsConstructor
 public class Product {
-	private String id;
+	private Long id;
 	private String producerCode;
 	private String producerName;
-	private String producerPrice;
+	private BigDecimal producerPrice;
 	private String adultsOnly;
 	private String description;
-	private String producer_id;
+	private String producerId;
 }
