@@ -15,8 +15,8 @@ import java.time.OffsetDateTime;
 @AllArgsConstructor
 public class Purchase {
 	private String id;
-	private String customerId;
-	private String productId;
-	private String quantity;
+	private Customer customer;
+	private Product product;
+	private int quantity;
 	private OffsetDateTime dateTime;
 }

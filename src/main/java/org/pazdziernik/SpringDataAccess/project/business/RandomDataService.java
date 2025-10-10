@@ -22,10 +22,16 @@ public class RandomDataService {
 
 	public void create() {
 		final Customer customer = customerRepository.create(randomDataPreparationService.createCustomer());
-		final Opinion opinion = opinionRepository.create(randomDataPreparationService.createOpinion());
 		final Producer producer = producerRepository.create(randomDataPreparationService.createProducer());
-		final Product product = productRepository.create(randomDataPreparationService.createProduct());
-		final Purchase purchase = purchaseRepository.create(randomDataPreparationService.createPurchase());
+		final Product product = productRepository.create(randomDataPreparationService.createProduct(producer));
+		final Opinion opinion = opinionRepository.create(randomDataPreparationService.createOpinion(customer, product));
+		final Purchase purchase = purchaseRepository.create(randomDataPreparationService.createPurchase(customer, product));
+
+		//		final Customer customer = customerRepository.create(randomDataPreparationService.createCustomer());
+		//		final Producer producer = producerRepository.create(randomDataPreparationService.createProducer());
+		//		final Product product = productRepository.create(randomDataPreparationService.createProduct(producer));
+		//		final Opinion opinion = opinionRepository.create(randomDataPreparationService.createOpinion(customer, product));
+		//		final Purchase purchase = purchaseRepository.create(randomDataPreparationService.createPurchase(customer, product));
 
 		log.debug("Random customer created: [{}]", customer);
 		log.debug("Random opinion created: [{}]", opinion);

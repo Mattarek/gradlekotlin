@@ -19,7 +19,7 @@ public class Product {
 	private String producerCode;
 	private String producerName;
 	private BigDecimal producerPrice;
-	private String adultsOnly;
+	private boolean adultsOnly;
 	private String description;
-	private String producerId;
+	private Producer producer;
 }
