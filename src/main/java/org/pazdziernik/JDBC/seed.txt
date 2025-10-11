@@ -1,0 +1,37 @@
+CREATE TABLE accounts (
+    id SERIAL PRIMARY KEY,
+    owner_name VARCHAR(100) NOT NULL,
+    balance DECIMAL(10,2) NOT NULL
+);
+
+CREATE TABLE transfers (
+    id SERIAL PRIMARY KEY,
+    sender_id INT NOT NULL REFERENCES accounts(id),
+    receiver_id INT NOT NULL REFERENCES accounts(id),
+    amount DECIMAL(10,2) NOT NULL,
+    transfer_date TIMESTAMP DEFAULT NOW()
+);
+
+CREATE OR REPLACE PROCEDURE transfer_money(
+    sender_id INT,
+    receiver_id INT,
+    amount DECIMAL(10,2)
+)
+LANGUAGE plpgsql
+AS $$
+BEGIN
+    IF (SELECT balance FROM accounts WHERE id = sender_id) < amount THEN
+        RAISE EXCEPTION 'Insufficient funds';
+    END IF;
+
+    UPDATE accounts SET balance = balance - amount WHERE id = sender_id;
+    UPDATE accounts SET balance = balance + amount WHERE id = receiver_id;
+
+    INSERT INTO transfers (sender_id, receiver_id, amount)
+    VALUES (sender_id, receiver_id, amount);
+END;
+$$;
+
+INSERT INTO accounts (owner_name, balance)
+VALUES ('Marcin', 1000.00),
+       ('Anna', 500.00);
