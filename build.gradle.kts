@@ -23,33 +23,38 @@ val junitVersion = "5.11.2"
 val mockitoVersion = "5.14.2"
 val logbackVersion = "1.2.11"
 val postgresqlDriverVersion = "42.5.0"
+val hibernateVersion = "6.6.2.Final"
+val jakartaPersistenceVersion = "3.1.0"
 
 dependencies {
-	// Spring Core
+	// --- SPRING ---
 	implementation("org.springframework:spring-core:$springVersion")
 	implementation("org.springframework:spring-beans:$springVersion")
 	implementation("org.springframework:spring-context:$springVersion")
 	implementation("org.springframework:spring-context-support:$springVersion")
 	implementation("org.springframework:spring-expression:$springVersion")
-	implementation("org.springframework:spring-jdbc:${springVersion}")
-	implementation("org.springframework:spring-tx:${springVersion}")
+	implementation("org.springframework:spring-jdbc:$springVersion")
+	implementation("org.springframework:spring-tx:$springVersion")
 
-	implementation("org.postgresql:postgresql:${postgresqlDriverVersion}")
+	// --- HIBERNATE + JPA ---
+	implementation("org.hibernate.orm:hibernate-core:$hibernateVersion")
+	implementation("jakarta.persistence:jakarta.persistence-api:$jakartaPersistenceVersion")
 
-	// Spring Test (tu jest SpringExtension)
+	// --- JDBC + PostgreSQL ---
+	implementation("org.postgresql:postgresql:$postgresqlDriverVersion")
+
+	// --- TESTY SPRINGA ---
 	testImplementation("org.springframework:spring-test:$springVersion")
 
-	// Logowanie
+	// --- LOGOWANIE ---
 	implementation("ch.qos.logback:logback-classic:$logbackVersion")
 
-	// Lombok
+	// --- LOMBOK ---
 	compileOnly("org.projectlombok:lombok:$lombokVersion")
 	annotationProcessor("org.projectlombok:lombok:$lombokVersion")
 
-	// JUnit 5
+	// --- TESTY ---
 	testImplementation("org.junit.jupiter:junit-jupiter:$junitVersion")
-
-	// Mockito
 	testImplementation("org.mockito:mockito-core:$mockitoVersion")
 	testImplementation("org.mockito:mockito-junit-jupiter:$mockitoVersion")
 }

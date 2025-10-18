@@ -1,4 +1,4 @@
-package org.pazdziernik.JDBC.src.model;
+package org.pazdziernik.JDBC.projectOne.src.model;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;

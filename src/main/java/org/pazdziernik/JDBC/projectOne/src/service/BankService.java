@@ -1,8 +1,8 @@
-package org.pazdziernik.JDBC.src.service;
+package org.pazdziernik.JDBC.projectOne.src.service;
 
-import org.pazdziernik.JDBC.src.dao.AccountDao;
-import org.pazdziernik.JDBC.src.dao.TransferDao;
-import org.pazdziernik.JDBC.src.model.Account;
+import org.pazdziernik.JDBC.projectOne.src.dao.AccountDao;
+import org.pazdziernik.JDBC.projectOne.src.dao.TransferDao;
+import org.pazdziernik.JDBC.projectOne.src.model.Account;
 
 import java.math.BigDecimal;
 import java.util.List;

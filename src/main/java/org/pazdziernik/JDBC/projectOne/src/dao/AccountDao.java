@@ -1,7 +1,7 @@
-package org.pazdziernik.JDBC.src.dao;
+package org.pazdziernik.JDBC.projectOne.src.dao;
 
-import org.pazdziernik.JDBC.src.model.Account;
-import org.pazdziernik.JDBC.src.util.DatabaseUtil;
+import org.pazdziernik.JDBC.projectOne.src.model.Account;
+import org.pazdziernik.JDBC.projectOne.src.util.DatabaseUtil;
 
 import java.sql.Connection;
 import java.sql.ResultSet;

@@ -1,4 +1,4 @@
-package org.pazdziernik.JDBC.src.util;
+package org.pazdziernik.JDBC.projectOne.src.util;
 
 import java.sql.Connection;
 import java.sql.DriverManager;

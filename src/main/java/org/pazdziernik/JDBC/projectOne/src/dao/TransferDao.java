@@ -1,6 +1,6 @@
-package org.pazdziernik.JDBC.src.dao;
+package org.pazdziernik.JDBC.projectOne.src.dao;
 
-import org.pazdziernik.JDBC.src.util.DatabaseUtil;
+import org.pazdziernik.JDBC.projectOne.src.util.DatabaseUtil;
 
 import java.math.BigDecimal;
 import java.sql.CallableStatement;

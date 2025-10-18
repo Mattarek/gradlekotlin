@@ -1,6 +1,6 @@
-package org.pazdziernik.JDBC.src;
+package org.pazdziernik.JDBC.projectOne.src;
 
-import org.pazdziernik.JDBC.src.service.BankService;
+import org.pazdziernik.JDBC.projectOne.src.service.BankService;
 
 import java.math.BigDecimal;
 
